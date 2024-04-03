@@ -4,15 +4,21 @@ creer environnement vir:
 pipenv shell
 
 Utilisez la commande pipenv lock pour générer le Pipfile.lock :
-csharp
-Copy code
+
 pipenv lock
 Ensuite, utilisez la commande pipenv run avec pip freeze pour afficher les dépendances dans le terminal :
-arduino
-Copy code
+
 pipenv run pip freeze
 Enfin, redirigez la sortie de la commande pip freeze vers un fichier requirements.txt :
-arduino
-Copy code
+
 pipenv run pip freeze > requirements.txt
 Cela créera un fichier requirements.txt contenant les dépendances spécifiées dans le Pipfile.lock. Assurez-vous d'exécuter ces commandes dans le répertoire de votre projet où se trouve le Pipfile.lock.
+
+admin-oc
+password-oc
+
+script postman pour token a mettre dans test
+
+var tokenValue = pm.response.json().access_token;
+pm.environment.set("authToken", tokenValue);
+
