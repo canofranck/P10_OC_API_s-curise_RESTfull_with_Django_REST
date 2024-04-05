@@ -23,10 +23,11 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from project.views import ProjectViewSet, AdminProjectListView
 
 router = routers.SimpleRouter()
 router.register("user", CustomUserViewSet, basename="user")
-
+router.register("projects", ProjectViewSet, basename="project")
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
@@ -35,5 +36,10 @@ urlpatterns = [
     ),
     path(
         "api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"
+    ),
+    path(
+        "api/admin/projects/",
+        AdminProjectListView.as_view({"get": "list"}),
+        name="admin_project_list",
     ),
 ]

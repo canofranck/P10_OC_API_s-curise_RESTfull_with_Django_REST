@@ -52,7 +52,7 @@ git clone https://github.com/canofranck/P10_OC_API_s-curise_RESTfull_with_Django
 ```
 Placez vous dans le dossier P10_OC_API_s-curise_RESTfull_with_Django_REST, puis créez un nouvel environnement virtuel:
 ```
-python -m venv env
+pip install pipenv
 ```
 Ensuite, activez-le.
 Windows:
@@ -65,7 +65,8 @@ source env/bin/activate
 ```
 Installez ensuite les packages requis:
 ```
-pip install -r requirements.txt
+pipenv install -r requirements.txt
+
 ```
 Ensuite, placez vous à la racine du projet (là ou se trouve le fichier manage.py), puis effectuez les migrations:
 ```

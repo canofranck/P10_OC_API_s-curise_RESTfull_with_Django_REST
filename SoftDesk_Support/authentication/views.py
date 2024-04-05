@@ -1,37 +1,51 @@
 from django.shortcuts import render
-
+from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
 from authentication.models import CustomUser
-from authentication.serializers import CustomUserSerializer
-from .permissions import IsAdminOrReadOnly
+from authentication.serializers import (
+    CustomUserCreateSerializer,
+    CustomUserListSerializer,
+    CustomUserDetailSerializer,
+)
+from .permissions import (
+    IsAdminOrReadOnly,
+    IsAuthenticated,
+    IsAdminOrOwnerOrReadOnly,
+    CanCreateUser,
+)
+
+CustomUserModel = get_user_model()
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
+    serializer_class = CustomUserListSerializer
+    serializer_create_class = CustomUserCreateSerializer
+    serializer_detail_class = CustomUserDetailSerializer
+    serializer_list_class = CustomUserListSerializer
     permission_classes = [
-        IsAdminOrReadOnly,
-    ]  # Appliquer la permission ici
+        IsAdminOrOwnerOrReadOnly,
+        IsAuthenticated,
+        CanCreateUser,
+    ]
 
-    def create(self, request):
-        data = request.data
-        age = data.get("age")
+    def get_serializer_class(self):
 
-        # Vérification de l'âge
-        if age and int(age) < 15:
-            return Response(
-                {
-                    "detail": "L'utilisateur doit avoir au moins 15 ans pour s'inscrire."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if self.action == "create":
+            return self.serializer_create_class
+        elif self.action == "retrieve":
+            return self.serializer_detail_class
+        elif self.action == "list":
+            return self.serializer_list_class
+        return super().get_serializer_class()
 
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+    def get_queryset(self):
+        return CustomUserModel.objects.all().order_by("username")
+
+    def perform_create(self, serializer):
+        # save the author as author and as contributor (request.user)
+        serializer.save(
+            author=self.request.user, contributors=[self.request.user]
         )
