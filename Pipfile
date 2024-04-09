@@ -10,6 +10,7 @@ djangorestframework = "*"
 sqlparse = "*"
 tzdata = "*"
 djangorestframework-simplejwt = "*"
+drf-nested-routers = "*"
 
 [dev-packages]
 

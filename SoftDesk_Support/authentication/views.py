@@ -8,12 +8,11 @@ from authentication.serializers import (
     CustomUserCreateSerializer,
     CustomUserListSerializer,
     CustomUserDetailSerializer,
+    CustomUserupdateSerializer,
 )
 from .permissions import (
-    IsAdminOrReadOnly,
     IsAuthenticated,
     IsAdminOrOwnerOrReadOnly,
-    CanCreateUser,
 )
 
 CustomUserModel = get_user_model()
@@ -25,10 +24,10 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     serializer_create_class = CustomUserCreateSerializer
     serializer_detail_class = CustomUserDetailSerializer
     serializer_list_class = CustomUserListSerializer
+    serializer_update_class = CustomUserupdateSerializer
     permission_classes = [
-        IsAdminOrOwnerOrReadOnly,
         IsAuthenticated,
-        CanCreateUser,
+        IsAdminOrOwnerOrReadOnly,
     ]
 
     def get_serializer_class(self):
@@ -39,6 +38,8 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return self.serializer_detail_class
         elif self.action == "list":
             return self.serializer_list_class
+        elif self.action in ["update", "partial_update"]:
+            return self.serializer_update_class
         return super().get_serializer_class()
 
     def get_queryset(self):

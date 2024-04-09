@@ -20,6 +20,8 @@ class IsAuthenticated(BasePermission):
     """
 
     def has_permission(self, request, view):
+        if request.method == "POST":
+            return True  # Autoriser les requêtes POST sans authentification
         return bool(request.user and request.user.is_authenticated)
 
 
@@ -51,13 +53,3 @@ class IsAdminOrOwnerOrReadOnly(BasePermission):
             return True
         # Permettre aux utilisateurs de modifier leur propre profil
         return obj == request.user
-
-
-class CanCreateUser(BasePermission):
-    """
-    Custom permission to allow anyone to create a new user.
-    """
-
-    def has_permission(self, request, view):
-        # Autoriser la création d'un utilisateur pour les requêtes POST
-        return request.method == "POST"

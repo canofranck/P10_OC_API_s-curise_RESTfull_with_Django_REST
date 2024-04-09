@@ -1,17 +1,25 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
-from project.permissions import IsAdminOrReadOnly, IsProjectCreatorOrReadOnly
-from project.models import Project
+from project.permissions import (
+    IsAdminOrReadOnly,
+    IsProjectCreatorOrReadOnly,
+)
+from project.models import Project, Issue, Comment
 from project.serializers import (
     ProjectCreateSerializer,
     ProjectListSerializer,
     ProjectDetailSerializer,
     ProjectUpdateSerializer,
+    ContributorSerializer,
+    ContributorDetailSerializer,
+    IssueCreateSerializer,
+    IssueDetailSerializer,
+    IssueListSerializer,
 )
 from rest_framework.response import Response
-
+from rest_framework.viewsets import ModelViewSet
 
 UserModel = get_user_model()
 
@@ -75,3 +83,103 @@ class AdminProjectListView(viewsets.ReadOnlyModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
+class ContributorViewSet(ModelViewSet):
+    """
+    A simple ViewSet for creating, viewing and editing contributors/users
+    - The queryset is based on the contributors of a project
+    - Display all contributors/Users related to the project mentioned in the url
+    """
+
+    serializer_class = ContributorSerializer
+    # permission_classes = [
+    #     IsProjectAuthorOrContributor,
+    # ]
+
+    _project = (
+        None  # create this variable to avoid unnecessary database queries
+    )
+
+    @property
+    def project(self):
+        """create an attribute project inside the ContributorViewSet
+        this attribute is available in the view and can be called/available in the serializer
+        """
+
+        # if the view was never executed before, will make the database query
+        #   otherwise _project will have a value and no database query will be performed
+        if self._project is None:
+            self._project = get_object_or_404(
+                Project.objects.all().prefetch_related("contributors"),
+                pk=self.kwargs["project_pk"],
+            )
+        return self._project
+
+    def get_queryset(self):
+        # use the UserModel attribute 'date_joined' to order to avoid the pagination warning
+        return self.project.contributors.all().order_by("created_time")
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ContributorDetailSerializer
+
+        return super().get_serializer_class()
+
+    def perform_create(self, serializer):
+        self.project.contributors.add(serializer.validated_data["user"])
+
+    def perform_destroy(self, instance):
+        self.project.contributors.remove(instance)
+
+
+class IssueViewSet(ModelViewSet):
+    """
+    A simple ViewSet for creating, viewing and editing issues
+    - The queryset is based on the project
+    - A contributor of the project can create a new Issue and assign it to himself
+        or to another contributor
+    """
+
+    serializer_class = IssueListSerializer
+    serializer_create_class = IssueCreateSerializer
+    serializer_detail_class = IssueDetailSerializer
+    serializer_list_class = IssueListSerializer
+
+    _issue = None
+
+    @property
+    def issue(self):
+        if self._issue is None:
+            self._issue = Issue.objects.filter(
+                project_id=self.kwargs["project_pk"]
+            )
+
+        return self._issue
+
+    def get_queryset(self):
+        # Obtenez la liste des contributeurs associés au projet
+        project = get_object_or_404(Project, id=self.kwargs["project_pk"])
+        contributors = project.contributors.all()
+
+        # Filtrez la liste complète des utilisateurs pour n'inclure que les contributeurs du projet
+        queryset = Issue.objects.filter(project=project)
+        return queryset.order_by("created_time")
+
+    def perform_create(self, serializer):
+        # Assurez-vous que l'utilisateur assigné est un contributeur du projet
+        assigned_to = serializer.validated_data["assigned_to"]
+        contributor = serializer.validated_data["assigned_to"]
+        project = get_object_or_404(Project, id=self.kwargs["project_pk"])
+        if assigned_to not in project.contributors.all():
+            return Response(
+                {
+                    "error": "L'utilisateur assigné n'est pas un contributeur du projet."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer.save(
+            author=self.request.user,
+            assigned_to=contributor,
+            project=project,
+        )

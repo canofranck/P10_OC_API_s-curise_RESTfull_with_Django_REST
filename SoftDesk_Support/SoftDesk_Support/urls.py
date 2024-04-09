@@ -17,18 +17,34 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework import routers
+from rest_framework_nested import routers
 from authentication.views import CustomUserViewSet
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from project.views import ProjectViewSet, AdminProjectListView
+from project.views import (
+    ProjectViewSet,
+    AdminProjectListView,
+    ContributorViewSet,
+    IssueViewSet,
+)
 
 router = routers.SimpleRouter()
+router.register(r"api/projects", ProjectViewSet, basename="project")
+# create url like: api/projects/1/contributors/ or api/projects/1/issues/
+project_router = routers.NestedSimpleRouter(
+    router, r"api/projects", lookup="project"
+)
+project_router.register(
+    r"contributors", ContributorViewSet, basename="project-contributors"
+)
+project_router.register(r"issues", IssueViewSet, basename="project-issues")
 router.register("user", CustomUserViewSet, basename="user")
-router.register("projects", ProjectViewSet, basename="project")
+# router.register("projects", ProjectViewSet, basename="project")
 urlpatterns = [
+    path(r"", include(router.urls)),
+    path(r"", include(project_router.urls)),
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
     path(

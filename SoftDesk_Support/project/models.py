@@ -69,9 +69,9 @@ class Issue(models.Model):
         ("TASK", "Task"),
     ]
     STATUS_CHOICES = [
+        ("TO_DO", "To Do"),
         ("IN_PROGRESS", "In Progress"),
-        ("RESOLVED", "Resolved"),
-        ("CANCELLED", "Cancelled"),
+        ("FINISHED", "Finished"),
     ]
 
     author = models.ForeignKey(
@@ -109,7 +109,7 @@ class Issue(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default="IN_PROGRESS",
+        default="TO_DO",
         help_text="Statuts issue",
     )
     assigned_to = models.ForeignKey(

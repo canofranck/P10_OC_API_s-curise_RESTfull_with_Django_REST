@@ -50,3 +50,15 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
             "can_data_be_shared",
             "created_time",
         ]
+
+
+class CustomUserupdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = [
+            "username",
+            "password",
+            "age",
+            "can_be_contacted",
+            "can_data_be_shared",
+        ]
