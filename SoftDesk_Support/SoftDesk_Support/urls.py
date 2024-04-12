@@ -30,8 +30,12 @@ from project.views import (
     IssueViewSet,
 )
 
-router = routers.SimpleRouter()
+
+router = routers.DefaultRouter()
 router.register(r"api/projects", ProjectViewSet, basename="project")
+router.register("api/user", CustomUserViewSet, basename="user")
+# router.register("projects", ProjectViewSet, basename="project")
+
 # create url like: api/projects/1/contributors/ or api/projects/1/issues/
 project_router = routers.NestedSimpleRouter(
     router, r"api/projects", lookup="project"
@@ -40,13 +44,12 @@ project_router.register(
     r"contributors", ContributorViewSet, basename="project-contributors"
 )
 project_router.register(r"issues", IssueViewSet, basename="project-issues")
-router.register("user", CustomUserViewSet, basename="user")
-# router.register("projects", ProjectViewSet, basename="project")
+
 urlpatterns = [
     path(r"", include(router.urls)),
     path(r"", include(project_router.urls)),
     path("admin/", admin.site.urls),
-    path("api/", include(router.urls)),
+    # path("api/", include(router.urls)),
     path(
         "api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"
     ),

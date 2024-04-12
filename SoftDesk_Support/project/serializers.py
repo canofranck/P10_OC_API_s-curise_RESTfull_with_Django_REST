@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from project.models import Project, CustomUser, Issue
+from django.contrib.auth import get_user_model
 
 
 class ProjectCreateSerializer(serializers.ModelSerializer):
@@ -67,14 +68,13 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "project_type",
-        ]  # Liste des champs à mettre à jour
+        ]
 
     def update(self, instance, validated_data):
         """
         Méthode pour mettre à jour une instance de Project avec les données validées.
         """
-        # Mettez en œuvre ici la logique pour mettre à jour les champs de l'instance
-        #
+
         instance.name = validated_data.get("name", instance.name)
         instance.description = validated_data.get(
             "description", instance.description
@@ -92,7 +92,6 @@ class ContributorSerializer(serializers.ModelSerializer):
     - selected information about the User
     """
 
-    # create attribute 'user', which is write_only because we just need to give a value
     user = serializers.IntegerField(write_only=True)
 
     class Meta:
@@ -133,7 +132,7 @@ class ContributorDetailSerializer(serializers.ModelSerializer):
 class IssueCreateSerializer(serializers.ModelSerializer):
     """
     serializer to create an Issue
-        - mandatory fields: name, description, state, tag, priority and assigned_to
+        - mandatory fields: title, description, state, tag, priority and assigned_to
     """
 
     class Meta:
@@ -149,12 +148,43 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        assigned_to_id = attrs.get("assigned_to")
+        print("ID de l'utilisateur assigné:", assigned_to_id)
+        # Récupérer l'ID de l'utilisateur assigné
+        try:
+            user = CustomUser.objects.get(username=assigned_to_id)
+            assigned_to_id = user.id
+            print("ID de l'utilisateur  :", assigned_to_id)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError(
+                "L'utilisateur assigné n'existe pas."
+            )
+
+        # Récupérer le projet à partir de la vue
+        project = self.context["view"].project
+        # Vérifier si l'utilisateur assigné est un contributeur du projet
+        contributors = project.contributors.all()
+        # Liste pour stocker les identifiants des contributeurs
+        contributor_ids = []
+        print("liste contributor", contributors)
+        for contributor in contributors:
+            user = CustomUser.objects.get(username=contributor)
+            contributor_id = user.id
+            contributor_ids.append(contributor_id)
+        print("contributor_id ", contributor_ids)
+        if assigned_to_id not in contributor_ids:
+            raise serializers.ValidationError(
+                {
+                    "assigned_to_error": "L'utilisateur assigné n'est pas un contributeur du projet."
+                }
+            )
+
         if (
             self.context["view"]
             .issue.filter(
-                name=attrs["title"],
+                title=attrs["title"],
                 tag=attrs["tag"],
-                state=attrs["status"],
+                status=attrs["status"],
                 priority=attrs["priority"],
             )
             .exists()

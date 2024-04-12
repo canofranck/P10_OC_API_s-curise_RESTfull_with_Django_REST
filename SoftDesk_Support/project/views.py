@@ -1,11 +1,9 @@
+from django.forms import ValidationError
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
-from project.permissions import (
-    IsAdminOrReadOnly,
-    IsProjectCreatorOrReadOnly,
-)
+from project.permissions import IsAuthor, IsProjectAuthorOrContributor
 from project.models import Project, Issue, Comment
 from project.serializers import (
     ProjectCreateSerializer,
@@ -35,7 +33,6 @@ class ProjectViewSet(
 
     permission_classes = [
         IsAuthenticated,  # Autorise seulement les utilisateurs authentifiés
-        IsProjectCreatorOrReadOnly,
     ]
 
     def get_serializer_class(self):
@@ -62,7 +59,7 @@ class ProjectViewSet(
         return self._project
 
     def get_queryset(self):
-        # use order_by to avoid the warning for the pagination
+
         return self.project.order_by("created_time")
 
     def perform_create(self, serializer):
@@ -77,7 +74,7 @@ class ProjectViewSet(
 class AdminProjectListView(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProjectListSerializer
     queryset = Project.objects.all()
-    permission_classes = [IsAdminOrReadOnly]
+    # permission_classes = [IsAdminOrReadOnly]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -93,13 +90,9 @@ class ContributorViewSet(ModelViewSet):
     """
 
     serializer_class = ContributorSerializer
-    # permission_classes = [
-    #     IsProjectAuthorOrContributor,
-    # ]
+    permission_classes = [IsProjectAuthorOrContributor]
 
-    _project = (
-        None  # create this variable to avoid unnecessary database queries
-    )
+    _project = None
 
     @property
     def project(self):
@@ -117,7 +110,7 @@ class ContributorViewSet(ModelViewSet):
         return self._project
 
     def get_queryset(self):
-        # use the UserModel attribute 'date_joined' to order to avoid the pagination warning
+        # use the UserModel attribute 'created-time' to order
         return self.project.contributors.all().order_by("created_time")
 
     def get_serializer_class(self):
@@ -133,7 +126,9 @@ class ContributorViewSet(ModelViewSet):
         self.project.contributors.remove(instance)
 
 
-class IssueViewSet(ModelViewSet):
+class IssueViewSet(
+    viewsets.ModelViewSet,
+):
     """
     A simple ViewSet for creating, viewing and editing issues
     - The queryset is based on the project
@@ -145,6 +140,19 @@ class IssueViewSet(ModelViewSet):
     serializer_create_class = IssueCreateSerializer
     serializer_detail_class = IssueDetailSerializer
     serializer_list_class = IssueListSerializer
+    permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return self.serializer_list_class
+        elif self.action == "retrieve":
+            return self.serializer_detail_class
+        elif self.action == "create":
+            return self.serializer_create_class
+        elif self.action == "update" or self.action == "partial_update":
+            return self.serializer_detail_class
+        else:
+            return self.serializer_class
 
     _issue = None
 
@@ -160,26 +168,22 @@ class IssueViewSet(ModelViewSet):
     def get_queryset(self):
         # Obtenez la liste des contributeurs associés au projet
         project = get_object_or_404(Project, id=self.kwargs["project_pk"])
-        contributors = project.contributors.all()
 
         # Filtrez la liste complète des utilisateurs pour n'inclure que les contributeurs du projet
         queryset = Issue.objects.filter(project=project)
         return queryset.order_by("created_time")
 
     def perform_create(self, serializer):
-        # Assurez-vous que l'utilisateur assigné est un contributeur du projet
-        assigned_to = serializer.validated_data["assigned_to"]
         contributor = serializer.validated_data["assigned_to"]
         project = get_object_or_404(Project, id=self.kwargs["project_pk"])
-        if assigned_to not in project.contributors.all():
-            return Response(
-                {
-                    "error": "L'utilisateur assigné n'est pas un contributeur du projet."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+
         serializer.save(
             author=self.request.user,
             assigned_to=contributor,
             project=project,
         )
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        project = get_object_or_404(Project, id=self.kwargs["project_pk"])
+        self.project = project  # Définir l'attribut project dans la vue

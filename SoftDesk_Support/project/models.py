@@ -9,7 +9,7 @@ class Project(models.Model):
         ("back-end", "Back-end"),
         ("front-end", "Front-end"),
         ("iOS", "iOS"),
-        ("Android", "Android"),
+        ("android", "Android"),
     ]
     name = models.CharField(max_length=255, help_text="Name of project")
     project_type = models.CharField(
@@ -69,7 +69,7 @@ class Issue(models.Model):
         ("TASK", "Task"),
     ]
     STATUS_CHOICES = [
-        ("TO_DO", "To Do"),
+        ("TO DO", "To Do"),
         ("IN_PROGRESS", "In Progress"),
         ("FINISHED", "Finished"),
     ]
@@ -97,9 +97,7 @@ class Issue(models.Model):
         related_name="issues",
         help_text="Project with associated issue",
     )
-    priority = models.CharField(
-        max_length=20, choices=PRIORITY_CHOICES, default="MEDIUM"
-    )
+
     tag = models.CharField(
         max_length=20,
         choices=TAG_CHOICES,
