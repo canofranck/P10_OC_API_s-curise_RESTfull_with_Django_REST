@@ -91,29 +91,30 @@ http://127.0.0.1:8000
 
 | *ID* | *Identifiant* | *Mot de passe* |
 |------|---------------|----------------|
-| 1    | testuser      | password321    |
-| 3    | user_2        | password321    |
-| 4    | new_user      | password321    |
+| 1    | admin-oc      | password-oc    |
+| 2    | usertwo       | usertwo        |
+| 3    | userthree     | userthree      |
+| 4    | userfour      | userfour       |
 
 
 #### Liste des points de terminaison de l'API (détaillés dans la [documentation](https://documenter.getpostman.com/view/32512679/2sA3BhdZUw#3c21d3aa-f62b-479b-9ecc-a784e51a7bd1)) :
 
 | #   | *Point de terminaison d'API*                                              | *Méthode HTTP* | *URL (base: http://127.0.0.1:8000)*       |
 |-----|---------------------------------------------------------------------------|----------------|-------------------------------------------|
-| 1   | Inscription de l'utilisateur                                              | POST           | /signup/                                  |
-| 2   | Connexion de l'utilisateur                                                | POST           | /login/                                   |
-| 3   | Récupérer la liste de tous les projets rattachés à l'utilisateur connecté | GET            | /projects/                                |
-| 4   | Créer un projet                                                           | POST           | /projects/                                |
-| 5   | Récupérer les détails d'un projet via son id                              | GET            | /projects/{id}/                           |
-| 6   | Mettre à jour un projet                                                   | PUT            | /projects/{id}/                           |
-| 7   | Supprimer un projet et ses problèmes                                      | DELETE         | /projects/{id}/                           |
-| 8   | Ajouter un utilisateur (collaborateur) à un projet                        | POST           | /projects/{id}/users/                     |
-| 9   | Récupérer la liste de tous les utilisateurs attachés à un projet          | GET            | /projects/{id}/users/                     |
-| 10  | Supprimer un utilisateur d'un projet                                      | DELETE         | /projects/{id}/users/{id}/                |
-| 11  | Récupérer la liste des problèmes liés à un projet                         | GET            | /projects/{id}/issues/                    |
-| 12  | Créer un problème dans un projet                                          | POST           | /projects/{id}/issues/                    |
-| 13  | Mettre à jour un problème dans un projet                                  | PUT            | /projects/{id}/issues/{id}/               |
-| 14  | Supprimer un problème d'un projet                                         | DELETE         | /projects/{id}/issues/{id}/               |
+| 1   | Inscription de l'utilisateur                                              | POST           | /api/user/                                |
+| 2   | Connexion de l'utilisateur                                                | POST           | /api/token/                               |
+| 3   | Récupérer la liste de tous les projets rattachés à l'utilisateur connecté | GET            | /api/projects                             |
+| 4   | Créer un projet                                                           | POST           | /api/projects/                            |
+| 5   | Récupérer les détails d'un projet via son id                              | GET            | /api/projects/:id/                        |
+| 6   | Mettre à jour un projet                                                   | PATCH          | /api/projects/:id/                        |
+| 7   | Supprimer un projet et ses problèmes                                      | DELETE         | /api/projects/:id/                        |
+| 8   | Ajouter un utilisateur (collaborateur) à un projet                        | POST           | /api/projects/:id/contributors/           |
+| 9   | Récupérer la liste de tous les utilisateurs attachés à un projet          | GET            | /api/projects/:id/contributors/           |
+| 10  | Supprimer un utilisateur d'un projet                                      | DELETE         | /api/projects/:id/                        |
+| 11  | Récupérer la liste des Issues liés à un projet                            | GET            | /api/projects/:ID_PROJET/issues/          |
+| 12  | Créer un problème dans un projet                                          | POST           | /api/projects/:ID_PROJET/issues/          |
+| 13  | Mettre à jour un problème dans un projet                                  | PUT            | /api/projects/:ID_PROJET/issues/:ID_ISSUE/|
+| 14  | Supprimer un problème d'un projet                                         | DELETE         | /api/projects/:ID_PROJET/issues/:ID_ISSUE/|
 
 
 
