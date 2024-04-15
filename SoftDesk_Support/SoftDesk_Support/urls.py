@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_nested import routers
@@ -28,9 +29,12 @@ from project.views import (
     AdminProjectListView,
     ContributorViewSet,
     IssueViewSet,
+    CommentViewSet,
 )
 
-
+auth_api_urls = []
+if settings.DEBUG:
+    auth_api_urls.append(path(r"verify/", include("rest_framework.urls")))
 router = routers.DefaultRouter()
 router.register(r"api/projects", ProjectViewSet, basename="project")
 router.register("api/user", CustomUserViewSet, basename="user")
@@ -45,11 +49,20 @@ project_router.register(
 )
 project_router.register(r"issues", IssueViewSet, basename="project-issues")
 
+# create url like: api/projects/1/issues/1/comments/
+comments_router = routers.NestedSimpleRouter(
+    project_router, r"issues", lookup="issue"
+)
+comments_router.register(
+    r"comments", CommentViewSet, basename="issue-comments"
+)
+
 urlpatterns = [
+    path(r"auth/", include(auth_api_urls)),
     path(r"", include(router.urls)),
     path(r"", include(project_router.urls)),
+    path("", include(comments_router.urls)),
     path("admin/", admin.site.urls),
-    # path("api/", include(router.urls)),
     path(
         "api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"
     ),

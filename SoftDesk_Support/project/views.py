@@ -1,4 +1,4 @@
-from django.forms import ValidationError
+from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
@@ -15,9 +15,13 @@ from project.serializers import (
     IssueCreateSerializer,
     IssueDetailSerializer,
     IssueListSerializer,
+    CommentCreateSerializer,
+    CommentListSerializer,
+    CommentDetailSerializer,
 )
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from django.conf import settings
 
 UserModel = get_user_model()
 
@@ -31,9 +35,7 @@ class ProjectViewSet(
     serializer_list_class = ProjectListSerializer
     serializer_update_class = ProjectUpdateSerializer
 
-    permission_classes = [
-        IsAuthenticated,  # Autorise seulement les utilisateurs authentifiés
-    ]
+    permission_classes = [IsAuthor]
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -67,8 +69,22 @@ class ProjectViewSet(
         serializer.save(
             author=self.request.user, contributors=[self.request.user]
         )
-        author = self.request.user
-        print(author)
+
+    # def perform_destroy(self, instance):
+    #     """
+    #     Supprime un contributeur du projet.
+    #     """
+    #     if self.request.user == self.project.author:
+    #         self.project.remove(instance)
+
+    #         return Response(
+    #             {"message": "Le projet a été supprimé avec succès."},
+    #             status=status.HTTP_204_NO_CONTENT,
+    #         )
+    #     else:
+    #         raise ValidationError(
+    #             "Seuls l' auteur du projet peuvent le supprimer."
+    #         )
 
 
 class AdminProjectListView(viewsets.ReadOnlyModelViewSet):
@@ -82,11 +98,12 @@ class AdminProjectListView(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
-class ContributorViewSet(ModelViewSet):
+class ContributorViewSet(viewsets.ModelViewSet):
     """
     A simple ViewSet for creating, viewing and editing contributors/users
     - The queryset is based on the contributors of a project
     - Display all contributors/Users related to the project mentioned in the url
+
     """
 
     serializer_class = ContributorSerializer
@@ -123,7 +140,20 @@ class ContributorViewSet(ModelViewSet):
         self.project.contributors.add(serializer.validated_data["user"])
 
     def perform_destroy(self, instance):
-        self.project.contributors.remove(instance)
+        """
+        Supprime un contributeur du projet.
+        """
+        if self.request.user == self.project.author:
+            self.project.contributors.remove(instance)
+
+            return Response(
+                {"message": "Le contributeur a été supprimé avec succès."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        else:
+            raise ValidationError(
+                "Seuls les auteurs de projet peuvent supprimer des contributeurs."
+            )
 
 
 class IssueViewSet(
@@ -187,3 +217,57 @@ class IssueViewSet(
         super().initial(request, *args, **kwargs)
         project = get_object_or_404(Project, id=self.kwargs["project_pk"])
         self.project = project  # Définir l'attribut project dans la vue
+
+
+class CommentViewSet(
+    viewsets.ModelViewSet,
+):
+    """
+    A simple ViewSet for creating, viewing and editing comments
+    - The queryset is based on the issue
+    - Creates the issue_url
+    """
+
+    serializer_class = CommentCreateSerializer
+    serializer_create_class = CommentCreateSerializer
+    serializer_detail_class = CommentDetailSerializer
+    serializer_list_class = CommentListSerializer
+    permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return self.serializer_list_class
+        elif self.action == "retrieve":
+            return self.serializer_detail_class
+        elif self.action == "create":
+            return self.serializer_create_class
+        elif self.action == "update" or self.action == "partial_update":
+            return self.serializer_detail_class
+        else:
+            return self.serializer_class
+
+    _comment = None
+
+    @property
+    def comment(self):
+        if self._comment is None:
+            self._comment = Comment.objects.filter(
+                issue_id=self.kwargs["issue_pk"]
+            )
+
+        return self._comment
+
+    def get_queryset(self):
+        return self.comment.order_by("created_time")
+
+    def perform_create(self, serializer):
+        project_pk = self.kwargs["project_pk"]
+        issue_pk = self.kwargs["issue_pk"]
+        issue = get_object_or_404(Issue, id=issue_pk)
+        issue_url = (
+            f"{settings.BASE_URL}/api/projects/{project_pk}/issues/{issue_pk}/"
+        )
+
+        serializer.save(
+            author=self.request.user, issue=issue, issue_url=issue_url
+        )

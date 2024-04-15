@@ -18,29 +18,50 @@ class IsAuthor(BasePermission):
 
 class IsProjectAuthorOrContributor(BasePermission):
     """
-    Object-level permission to only allow authors to edit and delete an object
-    - special permission for the ContributorViewSet
+    Object-level permission to only allow authors or contributors to edit and delete an object
     """
 
-    message = "You have to be the author to read , update or delete."
+    message = (
+        "You have to be the author or a contributor to read, update or delete."
+    )
 
     def has_permission(self, request, view):
-        # GET and POST
-        project_id = view.kwargs.get("project_pk")
-        project = Project.objects.get(pk=project_id)
-
-        # check if the request.user is a contributor
-        if request.user in project.contributors.all():
-            return True
-
-    def has_object_permission(self, request, view, obj):
-        # GET, POST, PUT, PATCH, DELETE with pk
         if request.method in SAFE_METHODS:
             return True
 
         project_id = view.kwargs.get("project_pk")
         project = Project.objects.get(pk=project_id)
-        return project.author == request.user
+
+        # Check if the request.user is the author of the project
+        if project.author == request.user:
+            return True
+
+        # Check if the request.user is a contributor to the project
+        if request.user in project.contributors.all():
+            return True
+
+        return False
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+
+        project_id = view.kwargs.get("project_pk")
+
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return False
+
+        # Vérifier si l'utilisateur est l'auteur du projet
+        if project.author == request.user:
+            return True
+
+        # Vérifier si l'utilisateur est un contributeur au projet
+        if request.user in project.contributors.all():
+            return True
+
+        return False
 
 
 class UserPermission(BasePermission):
@@ -58,3 +79,16 @@ class UserPermission(BasePermission):
             )  # Allow the user to retrieve, update or partial_update their own data
         else:
             return False  # For other actions, deny all requests
+
+
+class ProjectPermissions(BasePermission):
+    def has_permission(self, request, view):
+        try:
+            project = get_object_or_404(Project, id=view.kwargs["project_pk"])
+            if request.method in permissions.SAFE_METHODS:
+                return project in Project.objects.filter(
+                    contributors__user=request.user
+                )
+            return request.user == project.author
+        except KeyError:
+            return True

@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from project.models import Project, CustomUser, Issue
+from authentication.serializers import (
+    CustomUserDetailSerializer,
+)
+from project.models import Project, CustomUser, Issue, Comment
 from django.contrib.auth import get_user_model
 
 
@@ -33,6 +36,10 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
+    author = CustomUserDetailSerializer(
+        many=False
+    )  # affiche user dans la liste projet
+
     class Meta:
         model = Project
         fields = [
@@ -149,16 +156,17 @@ class IssueCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         assigned_to_id = attrs.get("assigned_to")
+        assigned_to_id = assigned_to_id.id
         print("ID de l'utilisateur assigné:", assigned_to_id)
         # Récupérer l'ID de l'utilisateur assigné
-        try:
-            user = CustomUser.objects.get(username=assigned_to_id)
-            assigned_to_id = user.id
-            print("ID de l'utilisateur  :", assigned_to_id)
-        except CustomUser.DoesNotExist:
-            raise serializers.ValidationError(
-                "L'utilisateur assigné n'existe pas."
-            )
+        # try:
+        #     user = CustomUser.objects.get(username=assigned_to_id)
+        #     assigned_to_id = user.id
+        #     print("ID de l'utilisateur  :", assigned_to_id)
+        # except CustomUser.DoesNotExist:
+        #     raise serializers.ValidationError(
+        #         "L'utilisateur assigné n'existe pas."
+        #     )
 
         # Récupérer le projet à partir de la vue
         project = self.context["view"].project
@@ -224,4 +232,53 @@ class IssueDetailSerializer(serializers.ModelSerializer):
             "status",
             "priority",
             "project",
+        ]
+
+
+class CommentCreateSerializer(serializers.ModelSerializer):
+    """
+    serializer to create a Comment
+        - mandatory fields: name and description
+    """
+
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "name",
+            "description",
+        ]
+
+    def validate_name(self, value):
+        if self.context["view"].comment.filter(name=value).exists():
+            raise serializers.ValidationError(
+                "This comment name exists already."
+            )
+
+        return value
+
+
+class CommentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "author",
+            "name",
+            "issue",
+        ]
+
+
+class CommentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "uuid",
+            "created_time",
+            "author",
+            "name",
+            "description",
+            "issue",
+            "issue_url",
         ]
