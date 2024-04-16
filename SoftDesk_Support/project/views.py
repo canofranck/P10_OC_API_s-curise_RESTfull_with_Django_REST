@@ -3,7 +3,11 @@ from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
-from project.permissions import IsAuthor, IsProjectAuthorOrContributor
+from project.permissions import (
+    IsAuthor,
+    IsProjectAuthorOrContributor,
+    UserPermission,
+)
 from project.models import Project, Issue, Comment
 from project.serializers import (
     ProjectCreateSerializer,
@@ -35,7 +39,7 @@ class ProjectViewSet(
     serializer_list_class = ProjectListSerializer
     serializer_update_class = ProjectUpdateSerializer
 
-    permission_classes = [IsAuthor]
+    permission_classes = [IsProjectAuthorOrContributor]
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -70,21 +74,22 @@ class ProjectViewSet(
             author=self.request.user, contributors=[self.request.user]
         )
 
-    # def perform_destroy(self, instance):
-    #     """
-    #     Supprime un contributeur du projet.
-    #     """
-    #     if self.request.user == self.project.author:
-    #         self.project.remove(instance)
-
-    #         return Response(
-    #             {"message": "Le projet a été supprimé avec succès."},
-    #             status=status.HTTP_204_NO_CONTENT,
-    #         )
-    #     else:
-    #         raise ValidationError(
-    #             "Seuls l' auteur du projet peuvent le supprimer."
-    #         )
+    def perform_destroy(self, instance):
+        """
+        Supprime un contributeur du projet.
+        """
+        if self.request.user == instance.author:
+            instance.delete()
+            print("delete fait je suis dans if ")
+            return Response(
+                {"message": "Le projet a été supprimé avec succès."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        else:
+            print("delete pas fait je suis dans else ")
+            raise ValidationError(
+                "Seuls l' auteur du projet peuvent le supprimer."
+            )
 
 
 class AdminProjectListView(viewsets.ReadOnlyModelViewSet):

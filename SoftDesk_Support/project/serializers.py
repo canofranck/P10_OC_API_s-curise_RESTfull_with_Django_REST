@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from authentication.serializers import (
-    CustomUserDetailSerializer,
+    CustomUserAuthorContributorSerializer,
 )
 from project.models import Project, CustomUser, Issue, Comment
 from django.contrib.auth import get_user_model
@@ -36,8 +36,11 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
-    author = CustomUserDetailSerializer(
+    author = CustomUserAuthorContributorSerializer(
         many=False
+    )  # affiche user dans la liste projet
+    contributors = CustomUserAuthorContributorSerializer(
+        many=True
     )  # affiche user dans la liste projet
 
     class Meta:
@@ -51,6 +54,13 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
+    author = CustomUserAuthorContributorSerializer(
+        many=False
+    )  # affiche user dans la liste projet
+    contributors = CustomUserAuthorContributorSerializer(
+        many=True
+    )  # affiche user dans la liste projet
+
     class Meta:
         model = Project
         fields = [
@@ -183,7 +193,7 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         if assigned_to_id not in contributor_ids:
             raise serializers.ValidationError(
                 {
-                    "assigned_to_error": "L'utilisateur assigné n'est pas un contributeur du projet."
+                    "assigned_to Error": "The assigned user is not a contributor to the project."
                 }
             )
 

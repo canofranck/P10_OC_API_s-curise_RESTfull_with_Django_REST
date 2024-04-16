@@ -29,39 +29,17 @@ class IsProjectAuthorOrContributor(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-        project_id = view.kwargs.get("project_pk")
-        project = Project.objects.get(pk=project_id)
+        if request.user.is_authenticated:
+            return True  # Autoriser les utilisateurs authentifiés à créer un nouveau projet
+        else:
+            return False
 
-        # Check if the request.user is the author of the project
-        if project.author == request.user:
-            return True
-
-        # Check if the request.user is a contributor to the project
-        if request.user in project.contributors.all():
-            return True
-
-        return False
-
-    def has_permission(self, request, view):
+    def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
 
-        project_id = view.kwargs.get("project_pk")
-
-        try:
-            project = Project.objects.get(pk=project_id)
-        except Project.DoesNotExist:
-            return False
-
         # Vérifier si l'utilisateur est l'auteur du projet
-        if project.author == request.user:
-            return True
-
-        # Vérifier si l'utilisateur est un contributeur au projet
-        if request.user in project.contributors.all():
-            return True
-
-        return False
+        return obj.author == request.user
 
 
 class UserPermission(BasePermission):
@@ -79,16 +57,3 @@ class UserPermission(BasePermission):
             )  # Allow the user to retrieve, update or partial_update their own data
         else:
             return False  # For other actions, deny all requests
-
-
-class ProjectPermissions(BasePermission):
-    def has_permission(self, request, view):
-        try:
-            project = get_object_or_404(Project, id=view.kwargs["project_pk"])
-            if request.method in permissions.SAFE_METHODS:
-                return project in Project.objects.filter(
-                    contributors__user=request.user
-                )
-            return request.user == project.author
-        except KeyError:
-            return True

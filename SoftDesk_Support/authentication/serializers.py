@@ -62,3 +62,12 @@ class CustomUserupdateSerializer(serializers.ModelSerializer):
             "can_be_contacted",
             "can_data_be_shared",
         ]
+
+
+class CustomUserAuthorContributorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = [
+            "id",
+            "username",
+        ]
