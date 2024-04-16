@@ -4,9 +4,9 @@ from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from project.permissions import (
-    IsAuthor,
-    IsProjectAuthorOrContributor,
-    UserPermission,
+    IsProjectCreator,
+    IsProjectAuthor,
+    IsProjectContributor,
 )
 from project.models import Project, Issue, Comment
 from project.serializers import (
@@ -24,7 +24,7 @@ from project.serializers import (
     CommentDetailSerializer,
 )
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+
 from django.conf import settings
 
 UserModel = get_user_model()
@@ -39,7 +39,19 @@ class ProjectViewSet(
     serializer_list_class = ProjectListSerializer
     serializer_update_class = ProjectUpdateSerializer
 
-    permission_classes = [IsProjectAuthorOrContributor]
+    def get_permissions(self):
+        if self.request.user.is_authenticated:
+            if self.action == "list" or self.action == "retrieve":
+                return [IsProjectContributor(), IsProjectCreator()]
+            elif self.action in [
+                "create",
+                "update",
+                "partial_update",
+                "destroy",
+            ]:
+                return [IsProjectAuthor()]
+
+        return []
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -57,7 +69,8 @@ class ProjectViewSet(
 
     @property
     def project(self):
-        if self._project is None:
+        # evite erreur si user anonyme
+        if self._project is None and self.request.user.is_authenticated:
             self._project = Project.objects.filter(
                 contributors=self.request.user
             )
@@ -65,8 +78,10 @@ class ProjectViewSet(
         return self._project
 
     def get_queryset(self):
-
-        return self.project.order_by("created_time")
+        if self.project is not None:  # evite erreur si user anonyme
+            return self.project.order_by("created_time")
+        else:
+            return Project.objects.none()
 
     def perform_create(self, serializer):
         # save the author as author and as contributor (request.user)
@@ -112,7 +127,7 @@ class ContributorViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ContributorSerializer
-    permission_classes = [IsProjectAuthorOrContributor]
+    # permission_classes = [IsProjectAuthorOrContributor]
 
     _project = None
 
@@ -175,7 +190,7 @@ class IssueViewSet(
     serializer_create_class = IssueCreateSerializer
     serializer_detail_class = IssueDetailSerializer
     serializer_list_class = IssueListSerializer
-    permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
+    # permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -237,7 +252,7 @@ class CommentViewSet(
     serializer_create_class = CommentCreateSerializer
     serializer_detail_class = CommentDetailSerializer
     serializer_list_class = CommentListSerializer
-    permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
+    # permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == "list":

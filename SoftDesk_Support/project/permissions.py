@@ -1,59 +1,96 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import BasePermission
 from project.models import Project
 
 
-class IsAuthor(BasePermission):
+class IsProjectContributor(BasePermission):
     """
-    Object-level permission to only allow obj.authors to edit and delete an object
+    Permission to allow only contributors of a project to access it.
     """
 
-    message = "You have to be the author to update or delete."
+    def has_object_permission(self, request, obj):
+        print("User making the request:", request.user)
+        print("Contributors of the project:", obj.contributors.all())
+
+        if request.user in obj.contributors.all():
+            return True
+        return False
+
+
+class IsIssueContributor(BasePermission):
+    """
+    Permission to allow only contributors of a project to access its issues.
+    """
+
+    def has_object_permission(self, request, obj):
+        project = obj.project
+        if request.user in project.contributors.all():
+            return True
+        return False
+
+
+class IsCommentContributor(BasePermission):
+    """
+    Permission to allow only contributors of a project to access its comments.
+    """
+
+    def has_object_permission(self, request, obj):
+        project = obj.issue.project
+        if request.user in project.contributors.all():
+            return True
+        return False
+
+
+class IsProjectAuthor(BasePermission):
+    """
+    Permission to allow only the author of a project to modify or delete it.
+    """
 
     def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
+        if obj.author == request.user:
             return True
+        return False
 
-        return obj.author == request.user
 
-
-class IsProjectAuthorOrContributor(BasePermission):
+class IsIssueAuthor(BasePermission):
     """
-    Object-level permission to only allow authors or contributors to edit and delete an object
+    Permission to allow only the author of an issue to modify or delete it.
     """
 
-    message = (
-        "You have to be the author or a contributor to read, update or delete."
-    )
+    def has_object_permission(self, request, view, obj):
+        if obj.author == request.user:
+            return True
+        return False
+
+
+class IsCommentAuthor(BasePermission):
+    """
+    Permission to allow only the author of a comment to modify or delete it.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        if obj.author == request.user:
+            return True
+        return False
+
+
+class IsContributorOfAssignedIssue(BasePermission):
+    """
+    Permission to allow only contributors of a project to be assigned to an issue.
+    """
 
     def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return True
-
-        if request.user.is_authenticated:
-            return True  # Autoriser les utilisateurs authentifiés à créer un nouveau projet
-        else:
-            return False
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-
-        # Vérifier si l'utilisateur est l'auteur du projet
-        return obj.author == request.user
+        if view.kwargs.get("project_pk"):
+            project = Project.objects.get(pk=view.kwargs.get("project_pk"))
+            return request.user in project.contributors.all()
+        return False
 
 
-class UserPermission(BasePermission):
-    def has_permission(self, request, view):
-        return True  # Allow all requests to pass the initial permission check
+class IsProjectCreator(BasePermission):
+    """
+    Permission to allow only the creator of a project to access it.
+    """
 
     def has_object_permission(self, request, view, obj):
-        # Deny actions on objects if the user is not authenticated
-        if not request.user.is_authenticated:
-            return False
-
-        if view.action in ["retrieve", "update", "partial_update"]:
-            return (
-                obj == request.user
-            )  # Allow the user to retrieve, update or partial_update their own data
-        else:
-            return False  # For other actions, deny all requests
+        if obj.author == request.user:
+            return True
+        return False
