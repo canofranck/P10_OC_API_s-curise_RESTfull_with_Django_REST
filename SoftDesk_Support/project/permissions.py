@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 from project.models import Project
 
 
@@ -7,7 +7,7 @@ class IsProjectContributor(BasePermission):
     Permission to allow only contributors of a project to access it.
     """
 
-    def has_object_permission(self, request, obj):
+    def has_object_permission(self, request, view, obj):
         print("User making the request:", request.user)
         print("Contributors of the project:", obj.contributors.all())
 
@@ -21,7 +21,7 @@ class IsIssueContributor(BasePermission):
     Permission to allow only contributors of a project to access its issues.
     """
 
-    def has_object_permission(self, request, obj):
+    def has_object_permission(self, request, view, obj):
         project = obj.project
         if request.user in project.contributors.all():
             return True
@@ -33,7 +33,7 @@ class IsCommentContributor(BasePermission):
     Permission to allow only contributors of a project to access its comments.
     """
 
-    def has_object_permission(self, request, obj):
+    def has_object_permission(self, request, view, obj):
         project = obj.issue.project
         if request.user in project.contributors.all():
             return True
