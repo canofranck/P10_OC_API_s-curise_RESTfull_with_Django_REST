@@ -5,6 +5,8 @@ import uuid
 
 
 class Project(models.Model):
+    """Model representing a project."""
+
     PROJECT_TYPES = [
         ("back-end", "Back-end"),
         ("front-end", "Front-end"),
@@ -44,6 +46,8 @@ class Project(models.Model):
 
 
 class Contributor(models.Model):
+    """Model representing a contributor."""
+
     contributor = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     project = models.ForeignKey(
         Project,
@@ -57,6 +61,7 @@ class Contributor(models.Model):
 
 
 class Issue(models.Model):
+    """Model representing a Issue."""
 
     PRIORITY_CHOICES = [
         ("LOW", "Low"),
@@ -128,6 +133,7 @@ class Issue(models.Model):
 
 
 class Comment(models.Model):
+    """Model representing a Comment."""
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     created_time = models.DateTimeField(

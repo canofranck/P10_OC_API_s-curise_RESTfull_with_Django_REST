@@ -65,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "SoftDesk_Support.middleware.BlockUnauthenticatedMiddleware",
 ]
 
 ROOT_URLCONF = "SoftDesk_Support.urls"

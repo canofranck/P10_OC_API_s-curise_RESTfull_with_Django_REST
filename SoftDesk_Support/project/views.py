@@ -7,6 +7,14 @@ from project.permissions import (
     IsProjectCreator,
     IsProjectAuthor,
     IsProjectContributor,
+    Contributor_IsAuthor,
+    Contributor_IsContributor,
+    CanViewIssue,
+    CanModifyOrDeleteIssue,
+    CanCreateIssue,
+    CanCreateComment,
+    CanViewComment,
+    CanModifyOrDeleteComment,
 )
 from project.models import Project, Issue, Comment
 from project.serializers import (
@@ -127,7 +135,16 @@ class ContributorViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ContributorSerializer
-    # permission_classes = [IsProjectAuthorOrContributor]
+
+    def get_permissions(self):
+        """
+        Définir les permissions pour les différentes actions.
+        """
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [Contributor_IsAuthor()]
+        elif self.action == "list":
+            return [Contributor_IsContributor()]
+        return []
 
     _project = None
 
@@ -190,7 +207,24 @@ class IssueViewSet(
     serializer_create_class = IssueCreateSerializer
     serializer_detail_class = IssueDetailSerializer
     serializer_list_class = IssueListSerializer
+
     # permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
+    def get_permissions(self):
+        if self.request.user.is_authenticated:
+            if self.action == "list" or self.action == "retrieve":
+                return [CanViewIssue()]
+            elif self.action in [
+                "update",
+                "partial_update",
+                "destroy",
+            ]:
+                return [CanModifyOrDeleteIssue()]
+            elif self.action in [
+                "create",
+            ]:
+                return [CanCreateIssue()]
+
+        return []
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -252,7 +286,23 @@ class CommentViewSet(
     serializer_create_class = CommentCreateSerializer
     serializer_detail_class = CommentDetailSerializer
     serializer_list_class = CommentListSerializer
-    # permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.user.is_authenticated:
+            if self.action == "list" or self.action == "retrieve":
+                return [CanViewComment()]
+            elif self.action in [
+                "update",
+                "partial_update",
+                "destroy",
+            ]:
+                return [CanModifyOrDeleteComment()]
+            elif self.action in [
+                "create",
+            ]:
+                return [CanCreateComment()]
+
+        return []
 
     def get_serializer_class(self):
         if self.action == "list":
