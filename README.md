@@ -105,7 +105,7 @@ Pour changer d utilisateur il faut repasser par l'adresse de depart de l API : h
 
 #### Liste des points de terminaison de l'API (détaillés dans la [documentation](https://documenter.getpostman.com/view/32512679/2sA3BhdZUw#3c21d3aa-f62b-479b-9ecc-a784e51a7bd1)) :
 
-|-----|---------------------------------------------------------------------------|----------------|------------------------------------------------------------------|
+
 | #   | *Point de terminaison de l'API*                                           | *Méthode HTTP* | *URL (base: http://127.0.0.1:8000)*                              |
 |-----|---------------------------------------------------------------------------|----------------|------------------------------------------------------------------|
 | 1   | Inscription de l'utilisateur                                              | POST           | /api/user/                                                       |
@@ -127,4 +127,4 @@ Pour changer d utilisateur il faut repasser par l'adresse de depart de l API : h
 | 17  | Créer un Comments dans une Issue                                          | POST           | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/              |
 | 18  | Mettre à jour un Comments dans une Issue                                  | PATCH          | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/:ID_COMMENTS/ |
 | 19  | Supprimer un Comments d une issu                                          | DELETE         | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/:ID_COMMENTS/ |
-|-----|---------------------------------------------------------------------------|----------------|------------------------------------------------------------------|
+
