@@ -102,6 +102,7 @@ Pour changer d utilisateur il faut repasser par l'adresse de depart de l API : h
 | 4    | userfour      | userfour       |
 | 5    | userfive      | userfive       |
 | 6    | usersix       | usersix        |
+| 7    | userone       | userone        |
 
 #### Liste des points de terminaison de l'API (détaillés dans la [documentation](https://documenter.getpostman.com/view/32512679/2sA3BhdZUw#3c21d3aa-f62b-479b-9ecc-a784e51a7bd1)) :
 
