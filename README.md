@@ -86,6 +86,11 @@ http://127.0.0.1:8000
 ```
 
 ## Informations
+Pour Tester l'API vous pouvez soit passer POSTMAN (fortement recommandé) soit  par le serveur django une fois celui ci lancer 
+aller sur la page ( du serveur [http://127.0.0.1:8000](http://127.0.0.1:8000))
+En haut à droite utiliser le bouton login  et prenez un des utlisateurs de la liste des utilisateurs existant ci dessous.
+Utiliser la liste des endpoints ci dessous pour tester L'API.
+Pour changer d utilisateur il faut repasser par l'adresse de depart de l API : http://127.0.0.1:8000 , les pages etant protégé contre les utilisateurs non inscrits c est la seule page ou on peut changer d' utilisateur.
 
 #### Liste des utilisateurs existants :
 
@@ -95,26 +100,31 @@ http://127.0.0.1:8000
 | 2    | usertwo       | usertwo        |
 | 3    | userthree     | userthree      |
 | 4    | userfour      | userfour       |
-
+| 5    | userfive      | userfive       |
+| 6    | usersix       | usersix        |
 
 #### Liste des points de terminaison de l'API (détaillés dans la [documentation](https://documenter.getpostman.com/view/32512679/2sA3BhdZUw#3c21d3aa-f62b-479b-9ecc-a784e51a7bd1)) :
 
-| #   | *Point de terminaison d'API*                                              | *Méthode HTTP* | *URL (base: http://127.0.0.1:8000)*       |
-|-----|---------------------------------------------------------------------------|----------------|-------------------------------------------|
-| 1   | Inscription de l'utilisateur                                              | POST           | /api/user/                                |
-| 2   | Connexion de l'utilisateur                                                | POST           | /api/token/                               |
-| 3   | Récupérer la liste de tous les projets rattachés à l'utilisateur connecté | GET            | /api/projects                             |
-| 4   | Créer un projet                                                           | POST           | /api/projects/                            |
-| 5   | Récupérer les détails d'un projet via son id                              | GET            | /api/projects/:id/                        |
-| 6   | Mettre à jour un projet                                                   | PATCH          | /api/projects/:id/                        |
-| 7   | Supprimer un projet et ses problèmes                                      | DELETE         | /api/projects/:id/                        |
-| 8   | Ajouter un utilisateur (collaborateur) à un projet                        | POST           | /api/projects/:id/contributors/           |
-| 9   | Récupérer la liste de tous les utilisateurs attachés à un projet          | GET            | /api/projects/:id/contributors/           |
-| 10  | Supprimer un utilisateur d'un projet                                      | DELETE         | /api/projects/:id/                        |
-| 11  | Récupérer la liste des Issues liés à un projet                            | GET            | /api/projects/:ID_PROJET/issues/          |
-| 12  | Créer un problème dans un projet                                          | POST           | /api/projects/:ID_PROJET/issues/          |
-| 13  | Mettre à jour un problème dans un projet                                  | PUT            | /api/projects/:ID_PROJET/issues/:ID_ISSUE/|
-| 14  | Supprimer un problème d'un projet                                         | DELETE         | /api/projects/:ID_PROJET/issues/:ID_ISSUE/|
-
-
-
+|-----|---------------------------------------------------------------------------|----------------|------------------------------------------------------------------|
+| #   | *Point de terminaison de l'API*                                           | *Méthode HTTP* | *URL (base: http://127.0.0.1:8000)*                              |
+|-----|---------------------------------------------------------------------------|----------------|------------------------------------------------------------------|
+| 1   | Inscription de l'utilisateur                                              | POST           | /api/user/                                                       |
+| 2   | Connexion de l'utilisateur                                                | POST           | /api/token/                                                      |
+| 3   | Refresh Token de l'utilisateur                                            | POST           | /api/token/refresh/                                              |
+| 4   | Récupérer la liste de tous les projets rattachés à l'utilisateur connecté | GET            | /api/projects                                                    |
+| 5   | Créer un projet                                                           | POST           | /api/projects/                                                   |
+| 6   | Récupérer les détails d'un projet via son id                              | GET            | /api/projects/:ID_PROJET/                                        |
+| 7   | Mettre à jour un projet                                                   | PATCH          | /api/projects/:ID_PROJET/                                        |
+| 8   | Supprimer un projet et ses problèmes                                      | DELETE         | /api/projects/:ID_PROJET/                                        |
+| 9   | Ajouter un utilisateur (collaborateur) à un projet                        | POST           | /api/projects/:ID_PROJET/contributors/                           |
+| 10  | Récupérer la liste de tous les utilisateurs attachés à un projet          | GET            | /api/projects/:ID_PROJET/contributors/                           |
+| 11  | Supprimer un (collaborateur) utilisateur d'un projet                      | DELETE         | /api/projects/:ID_PROJET/contributors/:ID_CONTRIBUTOR/           |
+| 12  | Récupérer la liste des Issues liés à un projet                            | GET            | /api/projects/:ID_PROJET/issues/                                 |
+| 13  | Créer une Issue dans un projet                                            | POST           | /api/projects/:ID_PROJET/issues/                                 |
+| 14  | Mettre à jour une Issue dans un projet                                    | PATCH          | /api/projects/:ID_PROJET/issues/:ID_ISSUE/                       |
+| 15  | Supprimer une Issue d'un projet                                           | DELETE         | /api/projects/:ID_PROJET/issues/:ID_ISSUE/                       |
+| 16  | Recupérer la listes des Comments d une issu liés a un projet              | GET            | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/              |
+| 17  | Créer un Comments dans une Issue                                          | POST           | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/              |
+| 18  | Mettre à jour un Comments dans une Issue                                  | PATCH          | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/:ID_COMMENTS/ |
+| 19  | Supprimer un Comments d une issu                                          | DELETE         | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/:ID_COMMENTS/ |
+|-----|---------------------------------------------------------------------------|----------------|------------------------------------------------------------------|
