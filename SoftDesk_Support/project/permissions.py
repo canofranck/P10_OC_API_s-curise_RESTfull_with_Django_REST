@@ -8,8 +8,9 @@ class IsProjectContributor(BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        print("User making the request:", request.user)
-        print("Contributors of the project:", obj.contributors.all())
+        """
+        Check if the requesting user is a contributor of the project.
+        """
 
         if request.user in obj.contributors.all():
             return True
@@ -22,7 +23,9 @@ class IsProjectAuthor(BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        print(obj)
+        """
+        Check if the requesting user is the author of the project.
+        """
         if obj.author == request.user:
             return True
         return False
@@ -34,6 +37,9 @@ class IsProjectCreator(BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        """
+        Check if the requesting user is the creator of the project.
+        """
         if obj.author == request.user:
             return True
         return False
@@ -45,9 +51,12 @@ class Contributor_IsContributor(BasePermission):
     """
 
     def has_permission(self, request, view):
-        # Récupère l'objet Project associé à la vue
+        """
+        Check if the requesting user is a contributor of the associated project.
+        """
+        # Retrieve the Project object associated with the view
         project = view.project
-        # Vérifie si l'utilisateur fait partie des contributeurs du projet
+        # Check if the user is a contributor of the project
         return project.contributor_relationship.filter(
             contributor=request.user
         ).exists()
@@ -59,16 +68,19 @@ class Contributor_IsAuthor(BasePermission):
     """
 
     def has_permission(self, request, view):
-        # Récupérer l'ID du projet à partir de l'URL de la vue
+        """
+        Check if the user is the author of the project associated with the contributor.
+        """
+        # Retrieve the project ID from the view's URL
         project_id = view.kwargs.get("project_pk")
 
-        # Récupérer le projet associé au contributeur
+        # Retrieve the project associated with the contributor
         try:
             project = Project.objects.get(pk=project_id)
         except Project.DoesNotExist:
             return False
 
-        # Vérifier si l'utilisateur est l'auteur du projet
+        # Check if the user is the author of the project
         return project.author == request.user
 
 
@@ -82,10 +94,6 @@ class CanViewIssue(BasePermission):
     def has_permission(self, request, view):
         """
         Check if the user has permission to view the issue.
-
-        :param request: The incoming request.
-        :param view: The view being accessed.
-        :return: True if the user is authorized, False otherwise.
         """
         # Check if the user is authenticated
         if request.user.is_authenticated:
@@ -118,9 +126,6 @@ class CanModifyOrDeleteIssue(BasePermission):
         """
         Check if the user has permission to access the view.
 
-        :param request: The incoming request.
-        :param view: The view being accessed.
-        :return: True if the user is authenticated, False otherwise.
         """
 
         # Check if the user is authenticated
@@ -132,10 +137,6 @@ class CanModifyOrDeleteIssue(BasePermission):
         """
         Check if the user has permission to access the object.
 
-        :param request: The incoming request.
-        :param view: The view being accessed.
-        :param obj: The object on which permission is checked (in this case, an issue).
-        :return: True if the user is the author of the issue, False otherwise.
         """
 
         # Check if the user is the author of the issue
@@ -155,9 +156,6 @@ class CanCreateIssue(BasePermission):
         """
         Check if the user has permission to create an issue for the project.
 
-        :param request: The incoming request.
-        :param view: The view being accessed.
-        :return: True if the user is a contributor of the project, False otherwise.
         """
 
         # Check if the user is authenticated
@@ -185,9 +183,6 @@ class CanViewComment(BasePermission):
         """
         Checks if the user has permission to view comments on the project's issues.
 
-        :param request: The incoming request.
-        :param view: The view being accessed.
-        :return: True if the user is the project author or a project contributor, False otherwise.
         """
 
         # Get the Project object based on the project ID in the request
@@ -211,10 +206,6 @@ class CanModifyOrDeleteComment(BasePermission):
         """
         Checks if the user has permission to modify or delete a comment.
 
-        :param request: The incoming request.
-        :param view: The view being accessed.
-        :param obj: The object on which permission is checked (here, a comment).
-        :return: True if the user is the author of the comment, False otherwise.
         """
 
         # Check if the user is the author of the comment
@@ -231,9 +222,6 @@ class CanCreateComment(BasePermission):
         """
         Checks if the user has permission to create a comment.
 
-        :param request: The incoming request.
-        :param view: The view being accessed.
-        :return: True if the user is a contributor of the project associated with the issue, False otherwise.
         """
 
         # Get the Issue object based on the issue ID in the request

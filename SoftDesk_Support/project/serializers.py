@@ -22,6 +22,9 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        """
+        Custom validation to check if the project already exists.
+        """
         if (
             self.context["view"]
             .project.filter(
@@ -36,12 +39,16 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing projects.
+    """
+
     author = CustomUserAuthorContributorSerializer(
         many=False
-    )  # affiche user dans la liste projet
+    )  # Display user in the author project list
     contributors = CustomUserAuthorContributorSerializer(
         many=True
-    )  # affiche user dans la liste projet
+    )  # Display user in the contributor project list
 
     class Meta:
         model = Project
@@ -54,12 +61,16 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for displaying detailed information about a project.
+    """
+
     author = CustomUserAuthorContributorSerializer(
         many=False
-    )  # affiche user dans la liste projet
+    )  # Display user in the author project list
     contributors = CustomUserAuthorContributorSerializer(
         many=True
-    )  # affiche user dans la liste projet
+    )  # Display user in the contributor project list
 
     class Meta:
         model = Project
@@ -76,7 +87,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 
 class ProjectUpdateSerializer(serializers.ModelSerializer):
     """
-    Serializer pour les opérations de mise à jour des instances de Project.
+    Serializer for updating instances of Project.
     """
 
     class Meta:
@@ -89,7 +100,7 @@ class ProjectUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """
-        Méthode pour mettre à jour une instance de Project avec les données validées.
+        Method to update an instance of Project with validated data.
         """
 
         instance.name = validated_data.get("name", instance.name)
@@ -116,6 +127,9 @@ class ContributorSerializer(serializers.ModelSerializer):
         fields = ["id", "user"]
 
     def validate_user(self, value):
+        """
+        Validate the user ID provided.
+        """
         user = CustomUser.objects.filter(pk=value).first()
 
         if user is None:
@@ -135,6 +149,10 @@ class ContributorSerializer(serializers.ModelSerializer):
 
 
 class ContributorDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for displaying detailed information about a contributor.
+    """
+
     class Meta:
         model = CustomUser
         fields = [
@@ -165,31 +183,24 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        """
+        Validate the provided data for creating an issue.
+        """
         assigned_to_id = attrs.get("assigned_to")
         assigned_to_id = assigned_to_id.id
-        print("ID de l'utilisateur assigné:", assigned_to_id)
-        # Récupérer l'ID de l'utilisateur assigné
-        # try:
-        #     user = CustomUser.objects.get(username=assigned_to_id)
-        #     assigned_to_id = user.id
-        #     print("ID de l'utilisateur  :", assigned_to_id)
-        # except CustomUser.DoesNotExist:
-        #     raise serializers.ValidationError(
-        #         "L'utilisateur assigné n'existe pas."
-        #     )
 
-        # Récupérer le projet à partir de la vue
+        # Retrieve the project from the view
         project = self.context["view"].project
-        # Vérifier si l'utilisateur assigné est un contributeur du projet
+        # Check if the assigned user is a contributor to the project
         contributors = project.contributors.all()
-        # Liste pour stocker les identifiants des contributeurs
+        # List to store contributor IDs
         contributor_ids = []
-        print("liste contributor", contributors)
+
         for contributor in contributors:
             user = CustomUser.objects.get(username=contributor)
             contributor_id = user.id
             contributor_ids.append(contributor_id)
-        print("contributor_id ", contributor_ids)
+
         if assigned_to_id not in contributor_ids:
             raise serializers.ValidationError(
                 {
@@ -213,6 +224,10 @@ class IssueCreateSerializer(serializers.ModelSerializer):
 
 
 class IssueListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing issues.
+    """
+
     class Meta:
         model = Issue
         fields = [
@@ -229,6 +244,10 @@ class IssueListSerializer(serializers.ModelSerializer):
 
 
 class IssueDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for displaying detailed information about an issue.
+    """
+
     class Meta:
         model = Issue
         fields = [
@@ -260,6 +279,9 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_name(self, value):
+        """
+        Validate the provided name for uniqueness.
+        """
         if self.context["view"].comment.filter(name=value).exists():
             raise serializers.ValidationError(
                 "This comment name exists already."
@@ -269,6 +291,10 @@ class CommentCreateSerializer(serializers.ModelSerializer):
 
 
 class CommentListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing comments.
+    """
+
     class Meta:
         model = Comment
         fields = [
@@ -280,6 +306,10 @@ class CommentListSerializer(serializers.ModelSerializer):
 
 
 class CommentDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for displaying detailed information about a comment.
+    """
+
     class Meta:
         model = Comment
         fields = [

@@ -41,6 +41,10 @@ UserModel = get_user_model()
 class ProjectViewSet(
     viewsets.ModelViewSet,
 ):
+    """
+    ViewSet for managing projects.
+    """
+
     serializer_class = ProjectCreateSerializer
     serializer_create_class = ProjectCreateSerializer
     serializer_detail_class = ProjectDetailSerializer
@@ -48,6 +52,11 @@ class ProjectViewSet(
     serializer_update_class = ProjectUpdateSerializer
 
     def get_permissions(self):
+        """
+        Returns the list of permissions needed for each view action.
+
+        :return: List of permissions.
+        """
         if self.request.user.is_authenticated:
             if self.action == "list" or self.action == "retrieve":
                 return [IsProjectContributor(), IsProjectCreator()]
@@ -62,6 +71,11 @@ class ProjectViewSet(
         return []
 
     def get_serializer_class(self):
+        """
+        Returns the appropriate serializer class based on the view action.
+
+        :return: Serializer class.
+        """
         if self.action == "list":
             return self.serializer_list_class
         elif self.action == "retrieve":
@@ -77,7 +91,12 @@ class ProjectViewSet(
 
     @property
     def project(self):
-        # evite erreur si user anonyme
+        """
+        Returns the project associated with the logged-in user.
+
+        :return: Project object or None.
+        """
+        # avoids error if user anonymous
         if self._project is None and self.request.user.is_authenticated:
             self._project = Project.objects.filter(
                 contributors=self.request.user
@@ -86,12 +105,23 @@ class ProjectViewSet(
         return self._project
 
     def get_queryset(self):
-        if self.project is not None:  # evite erreur si user anonyme
+        """
+        Returns the queryset of projects associated with the logged-in user.
+
+        :return: Queryset of projects.
+        """
+
+        if self.project is not None:  # avoids error if user anonymous
             return self.project.order_by("created_time")
         else:
             return Project.objects.none()
 
     def perform_create(self, serializer):
+        """
+        Creates a new project.
+
+        :param serializer: Serializer for the project.
+        """
         # save the author as author and as contributor (request.user)
         serializer.save(
             author=self.request.user, contributors=[self.request.user]
@@ -99,19 +129,22 @@ class ProjectViewSet(
 
     def perform_destroy(self, instance):
         """
-        Supprime un contributeur du projet.
+        Deletes a contributor from the project.
+
+        :param instance: Project instance.
+        :raise ValidationError: If the user is not the author of the project.
         """
         if self.request.user == instance.author:
             instance.delete()
-            print("delete fait je suis dans if ")
+
             return Response(
-                {"message": "Le projet a été supprimé avec succès."},
+                {"message": "The project has been successfully deleted."},
                 status=status.HTTP_204_NO_CONTENT,
             )
         else:
-            print("delete pas fait je suis dans else ")
+
             raise ValidationError(
-                "Seuls l' auteur du projet peuvent le supprimer."
+                "Only the author of the project can delete it."
             )
 
 
@@ -138,7 +171,9 @@ class ContributorViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Définir les permissions pour les différentes actions.
+        Returns the list of permissions needed for each view action.
+
+        :return: List of permissions.
         """
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [Contributor_IsAuthor()]
@@ -154,8 +189,8 @@ class ContributorViewSet(viewsets.ModelViewSet):
         this attribute is available in the view and can be called/available in the serializer
         """
 
-        # if the view was never executed before, will make the database query
-        #   otherwise _project will have a value and no database query will be performed
+        # If the view was never executed before, it will make the database query
+        # Otherwise, _project will have a value and no database query will be performed
         if self._project is None:
             self._project = get_object_or_404(
                 Project.objects.all().prefetch_related("contributors"),
@@ -164,32 +199,41 @@ class ContributorViewSet(viewsets.ModelViewSet):
         return self._project
 
     def get_queryset(self):
-        # use the UserModel attribute 'created-time' to order
+        """
+        Return the queryset of contributors of the associated project, ordered by creation time.
+        """
         return self.project.contributors.all().order_by("created_time")
 
     def get_serializer_class(self):
+        """
+        Return the serializer class based on the action.
+        If the action is 'retrieve', use ContributorDetailSerializer, otherwise use ContributorSerializer.
+        """
         if self.action == "retrieve":
             return ContributorDetailSerializer
 
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
+        """
+        Add the validated user from the serializer data to the project's contributors.
+        """
         self.project.contributors.add(serializer.validated_data["user"])
 
     def perform_destroy(self, instance):
         """
-        Supprime un contributeur du projet.
+        Delete a contributor from the project.
         """
         if self.request.user == self.project.author:
             self.project.contributors.remove(instance)
 
             return Response(
-                {"message": "Le contributeur a été supprimé avec succès."},
+                {"message": "The contributor has been successfully removed."},
                 status=status.HTTP_204_NO_CONTENT,
             )
         else:
             raise ValidationError(
-                "Seuls les auteurs de projet peuvent supprimer des contributeurs."
+                "Only project authors can remove contributors."
             )
 
 
@@ -200,7 +244,7 @@ class IssueViewSet(
     A simple ViewSet for creating, viewing and editing issues
     - The queryset is based on the project
     - A contributor of the project can create a new Issue and assign it to himself
-        or to another contributor
+      or to another contributor
     """
 
     serializer_class = IssueListSerializer
@@ -208,8 +252,10 @@ class IssueViewSet(
     serializer_detail_class = IssueDetailSerializer
     serializer_list_class = IssueListSerializer
 
-    # permission_classes = [IsProjectAuthorOrContributor, IsAuthenticated]
     def get_permissions(self):
+        """
+        Define permissions for different actions.
+        """
         if self.request.user.is_authenticated:
             if self.action == "list" or self.action == "retrieve":
                 return [CanViewIssue()]
@@ -227,6 +273,9 @@ class IssueViewSet(
         return []
 
     def get_serializer_class(self):
+        """
+        Return the serializer class based on the action.
+        """
         if self.action == "list":
             return self.serializer_list_class
         elif self.action == "retrieve":
@@ -242,6 +291,9 @@ class IssueViewSet(
 
     @property
     def issue(self):
+        """
+        Retrieve issues related to the project.
+        """
         if self._issue is None:
             self._issue = Issue.objects.filter(
                 project_id=self.kwargs["project_pk"]
@@ -250,14 +302,20 @@ class IssueViewSet(
         return self._issue
 
     def get_queryset(self):
-        # Obtenez la liste des contributeurs associés au projet
+        """
+        Get the queryset of issues related to the project.
+        """
+        # Get the list of contributors associated with the project
         project = get_object_or_404(Project, id=self.kwargs["project_pk"])
 
-        # Filtrez la liste complète des utilisateurs pour n'inclure que les contributeurs du projet
+        # Filter the complete list of users to include only project contributors
         queryset = Issue.objects.filter(project=project)
         return queryset.order_by("created_time")
 
     def perform_create(self, serializer):
+        """
+        Create a new issue and assign it to a contributor.
+        """
         contributor = serializer.validated_data["assigned_to"]
         project = get_object_or_404(Project, id=self.kwargs["project_pk"])
 
@@ -268,9 +326,12 @@ class IssueViewSet(
         )
 
     def initial(self, request, *args, **kwargs):
+        """
+        Set the project attribute in the view.
+        """
         super().initial(request, *args, **kwargs)
         project = get_object_or_404(Project, id=self.kwargs["project_pk"])
-        self.project = project  # Définir l'attribut project dans la vue
+        self.project = project  # Define project attribute in view
 
 
 class CommentViewSet(
@@ -288,6 +349,9 @@ class CommentViewSet(
     serializer_list_class = CommentListSerializer
 
     def get_permissions(self):
+        """
+        Define permissions for different actions.
+        """
         if self.request.user.is_authenticated:
             if self.action == "list" or self.action == "retrieve":
                 return [CanViewComment()]
@@ -305,6 +369,9 @@ class CommentViewSet(
         return []
 
     def get_serializer_class(self):
+        """
+        Return the serializer class based on the action.
+        """
         if self.action == "list":
             return self.serializer_list_class
         elif self.action == "retrieve":
@@ -320,6 +387,9 @@ class CommentViewSet(
 
     @property
     def comment(self):
+        """
+        Retrieve comments related to the issue.
+        """
         if self._comment is None:
             self._comment = Comment.objects.filter(
                 issue_id=self.kwargs["issue_pk"]
@@ -328,9 +398,15 @@ class CommentViewSet(
         return self._comment
 
     def get_queryset(self):
+        """
+        Get the queryset of comments related to the issue.
+        """
         return self.comment.order_by("created_time")
 
     def perform_create(self, serializer):
+        """
+        Create a new comment and set issue_url.
+        """
         project_pk = self.kwargs["project_pk"]
         issue_pk = self.kwargs["issue_pk"]
         issue = get_object_or_404(Issue, id=issue_pk)
