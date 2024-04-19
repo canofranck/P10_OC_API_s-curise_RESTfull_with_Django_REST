@@ -4,9 +4,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from project.permissions import (
-    IsProjectCreator,
     IsProjectAuthor,
-    IsProjectContributor,
+    IsProjectContributorAuthor,
     Contributor_IsAuthor,
     Contributor_IsContributor,
     CanViewIssue,
@@ -59,7 +58,7 @@ class ProjectViewSet(
         """
         if self.request.user.is_authenticated:
             if self.action == "list" or self.action == "retrieve":
-                return [IsProjectContributor(), IsProjectCreator()]
+                return [IsProjectContributorAuthor()]
             elif self.action in [
                 "create",
                 "update",

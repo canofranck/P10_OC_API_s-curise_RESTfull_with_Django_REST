@@ -28,14 +28,28 @@ class BlockUnauthenticatedMiddleware:
         :param request: The incoming request.
         :return: The response to the request.
         """
-        # Checks if the user is authenticated and blocks access to the base pages of the API
-        if not request.user.is_authenticated and request.path.startswith(
+        # Checks if the request path starts with /api/token/ or /api/token/refresh/
+        if request.path.startswith("/api/token/") or request.path.startswith(
+            "/api/token/refresh/"
+        ):
+            print("je suis pas authentifier mais je le loggue")
+            return self.get_response(request)
+
+        # Checks if the user is authenticated and the request path starts with /api/
+        elif request.user.is_authenticated and request.path.startswith(
             "/api/"
         ):
+            print("je suis authentifier")
+            return self.get_response(request)
+
+        # Checks if the user is not authenticated and the request path starts with /api/
+        elif not request.user.is_authenticated and request.path.startswith(
+            "/api/"
+        ):
+            print("je suis pas authentifier")
             return HttpResponseForbidden(
                 "You are not authorized to access this resource."
             )
 
-        # Passes the request to the next middleware in the chain
-        response = self.get_response(request)
-        return response
+        # For all other paths, pass the request to the next middleware in the chain
+        return self.get_response(request)

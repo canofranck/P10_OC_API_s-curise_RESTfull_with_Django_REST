@@ -2,18 +2,24 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from project.models import Project, Issue
 
 
-class IsProjectContributor(BasePermission):
+class IsProjectContributorAuthor(BasePermission):
     """
     Permission to allow only contributors of a project to access it.
     """
 
     def has_object_permission(self, request, view, obj):
         """
-        Check if the requesting user is a contributor of the project.
+        Check if the requesting user is a contributor or author of the project.
         """
-
-        if request.user in obj.contributors.all():
+        print("Requesting User:", request.user)
+        print("Project Contributors:", obj.contributors.all())
+        print("Project Author:", obj.author)
+        if (
+            request.user in obj.contributors.all()
+            or obj.author == request.user
+        ):
             return True
+
         return False
 
 
@@ -25,20 +31,6 @@ class IsProjectAuthor(BasePermission):
     def has_object_permission(self, request, view, obj):
         """
         Check if the requesting user is the author of the project.
-        """
-        if obj.author == request.user:
-            return True
-        return False
-
-
-class IsProjectCreator(BasePermission):
-    """
-    Permission to allow only the creator of a project to access it.
-    """
-
-    def has_object_permission(self, request, view, obj):
-        """
-        Check if the requesting user is the creator of the project.
         """
         if obj.author == request.user:
             return True
