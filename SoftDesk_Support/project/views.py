@@ -95,9 +95,18 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
         """
         # avoids error if user anonymous
         if self._project is None and self.request.user.is_authenticated:
-            self._project = Project.objects.filter(
+            # Recherche les projets où l'utilisateur est l'auteur
+            author_projects = Project.objects.filter(
+                author_id=self.request.user.id
+            )
+
+            # Recherche les projets où l'utilisateur est un contributeur
+            contributor_projects = Project.objects.filter(
                 contributors=self.request.user
             )
+
+            # Combinaison des projets où l'utilisateur est soit l'auteur soit un contributeur
+            self._project = author_projects | contributor_projects
 
         return self._project
 
@@ -121,7 +130,8 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
         """
         # save the author as author and as contributor (request.user)
         serializer.save(
-            author=self.request.user, contributors=[self.request.user]
+            author=self.request.user
+            # author=self.request.user, contributors=[self.request.user]
         )
 
     def perform_destroy(self, instance):

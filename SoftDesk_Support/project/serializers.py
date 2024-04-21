@@ -186,25 +186,19 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         """
         Validate the provided data for creating an issue.
         """
-        assigned_to_id = attrs.get("assigned_to")
-        assigned_to_id = assigned_to_id.id
+        assigned_to = attrs.get("assigned_to")
 
-        # Retrieve the project from the view
+        # Retrieve the project from the view context
         project = self.context["view"].project
+
         # Check if the assigned user is a contributor to the project
-        contributors = project.contributors.all()
-        # List to store contributor IDs
-        contributor_ids = []
-
-        for contributor in contributors:
-            user = CustomUser.objects.get(username=contributor)
-            contributor_id = user.id
-            contributor_ids.append(contributor_id)
-
-        if assigned_to_id not in contributor_ids:
+        if (
+            assigned_to not in project.contributors.all()
+            and assigned_to != project.author
+        ):
             raise serializers.ValidationError(
                 {
-                    "assigned_to Error": "The assigned user is not a contributor to the project."
+                    "assigned_to": "The assigned user must be either a contributor to the project or the project author."
                 }
             )
 
@@ -218,7 +212,7 @@ class IssueCreateSerializer(serializers.ModelSerializer):
             )
             .exists()
         ):
-            raise serializers.ValidationError("This issue exists already!")
+            raise serializers.ValidationError("This issue already exists!")
 
         return attrs
 
