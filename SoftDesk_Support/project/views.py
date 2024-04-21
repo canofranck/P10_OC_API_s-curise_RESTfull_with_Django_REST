@@ -348,7 +348,7 @@ class CommentViewSet(
     - Creates the issue_url
     """
 
-    serializer_class = CommentCreateSerializer
+    serializer_class = CommentListSerializer
     serializer_create_class = CommentCreateSerializer
     serializer_detail_class = CommentDetailSerializer
     serializer_list_class = CommentListSerializer
@@ -359,18 +359,17 @@ class CommentViewSet(
         """
         if not self.request.user.is_authenticated:
             permission_classes = [AllowAnonymousAccess]
-            if self.action == "list" or self.action == "retrieve":
-                permission_classes = [CanViewComment]
-            elif self.action in [
-                "update",
-                "partial_update",
-                "destroy",
-            ]:
-                permission_classes = [CanModifyOrDeleteComment]
-            elif self.action in [
-                "create",
-            ]:
-                permission_classes = [CanCreateComment]
+
+        elif self.action in [
+            "update",
+            "partial_update",
+            "destroy",
+        ]:
+            permission_classes = [CanModifyOrDeleteComment]
+        elif self.action in [
+            "create",
+        ]:
+            permission_classes = [CanCreateComment]
 
         else:
             permission_classes = []

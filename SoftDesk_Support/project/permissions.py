@@ -198,13 +198,10 @@ class CanModifyOrDeleteComment(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         """
-        Checks if the user has permission to modify or delete a comment.
-
+        Vérifie si l'utilisateur a la permission de modifier ou supprimer un commentaire.
         """
-
-        # Check if the user is the author of the comment
-        print(obj.author, " user", request.user)
-        return obj.author == request.user
+        # Vérifie si l'utilisateur est l'auteur du commentaire
+        return obj.author.id == request.user.id
 
 
 class CanCreateComment(permissions.BasePermission):
@@ -236,4 +233,4 @@ class AllowAnonymousAccess(permissions.BasePermission):
         """
         Check if the user is anonymous and deny access.
         """
-        return F
+        return False
