@@ -1,8 +1,9 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+# from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework import permissions
 from project.models import Project, Issue
 
 
-class IsProjectContributorAuthor(BasePermission):
+class IsProjectContributorAuthor(permissions.BasePermission):
     """
     Permission to allow only contributors of a project to access it.
     """
@@ -23,7 +24,7 @@ class IsProjectContributorAuthor(BasePermission):
         return False
 
 
-class IsProjectAuthor(BasePermission):
+class IsProjectAuthor(permissions.BasePermission):
     """
     Permission to allow only the author of a project to modify or delete it.
     """
@@ -37,7 +38,7 @@ class IsProjectAuthor(BasePermission):
         return False
 
 
-class Contributor_IsContributor(BasePermission):
+class Contributor_IsContributor(permissions.BasePermission):
     """
     Permission to allow only contributors to a project to view the list of contributors.
     """
@@ -54,7 +55,7 @@ class Contributor_IsContributor(BasePermission):
         ).exists()
 
 
-class Contributor_IsAuthor(BasePermission):
+class Contributor_IsAuthor(permissions.BasePermission):
     """
     Checks whether the user is the author of the project associated with the contributor.
     """
@@ -76,21 +77,21 @@ class Contributor_IsAuthor(BasePermission):
         return project.author == request.user
 
 
-class CanViewIssue(BasePermission):
+class CanViewIssue(permissions.BasePermission):
     """
     Custom permission to allow only authenticated users who are contributors or project authors to view issues.
     """
 
     message = "You are not authorized to view this issue."
 
-    def has_permission(self, request, view):
+    def has_permission(self, request, view=None):
         """
         Check if the user has permission to view the issue.
         """
         # Check if the user is authenticated
-        if request.user.is_authenticated:
+        if request.user and request.user.is_authenticated:
             # Check if the user is a contributor or the author of the project
-            project_id = view.kwargs.get(
+            project_id = request.resolver_match.kwargs.get(
                 "project_pk"
             )  # Get the project ID from the view's kwargs
             # Check if the user is a contributor to the project
@@ -103,13 +104,13 @@ class CanViewIssue(BasePermission):
             ).exists()
 
             return (
-                project
-                or project_author  # Allow access for contributors or the author of the project
-            )
+                project or project_author
+            )  # Allow access for contributors or the author of the project
+
         return False  # Deny access for unauthenticated users
 
 
-class CanModifyOrDeleteIssue(BasePermission):
+class CanModifyOrDeleteIssue(permissions.BasePermission):
     """Customize permissions to allow only authenticated users to modify or delete issues, and authorize the issue author to perform these actions."""
 
     message = "You are not authorized to modify or delete this issue."
@@ -137,7 +138,7 @@ class CanModifyOrDeleteIssue(BasePermission):
         return False  # Deny modification or deletion for other users
 
 
-class CanCreateIssue(BasePermission):
+class CanCreateIssue(permissions.BasePermission):
     """
     Custom permission to allow only project contributors to create issues.
     """
@@ -165,7 +166,7 @@ class CanCreateIssue(BasePermission):
         return False  # Deny creating issue for unauthenticated users
 
 
-class CanViewComment(BasePermission):
+class CanViewComment(permissions.BasePermission):
     """
     Permission to view comments on the issues of a project.
     Only the project author and project contributors can view comments.
@@ -182,13 +183,14 @@ class CanViewComment(BasePermission):
         project = Project.objects.get(id=project_id)
 
         # Check if the user is the project author or a project contributor
+
         return (
             request.user == project.author
             or request.user in project.contributors.all()
         )
 
 
-class CanModifyOrDeleteComment(BasePermission):
+class CanModifyOrDeleteComment(permissions.BasePermission):
     """
     Permission to modify or delete a comment.
     Only the comment author can modify or delete their own comment.
@@ -201,10 +203,11 @@ class CanModifyOrDeleteComment(BasePermission):
         """
 
         # Check if the user is the author of the comment
+        print(obj.author, " user", request.user)
         return obj.author == request.user
 
 
-class CanCreateComment(BasePermission):
+class CanCreateComment(permissions.BasePermission):
     """
     Permission to create a comment.
     Only project contributors can create a comment on an issue.
@@ -222,3 +225,15 @@ class CanCreateComment(BasePermission):
 
         # Check if the user is a contributor of the project associated with the issue
         return request.user in issue.project.contributors.all()
+
+
+class AllowAnonymousAccess(permissions.BasePermission):
+    """
+    Permission to deny access for anonymous users.
+    """
+
+    def has_permission(self, request, view):
+        """
+        Check if the user is anonymous and deny access.
+        """
+        return F

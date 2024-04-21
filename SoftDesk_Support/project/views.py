@@ -2,7 +2,7 @@ from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
-from rest_framework.permissions import IsAuthenticated
+
 from project.permissions import (
     IsProjectAuthor,
     IsProjectContributorAuthor,
@@ -14,6 +14,7 @@ from project.permissions import (
     CanCreateComment,
     CanViewComment,
     CanModifyOrDeleteComment,
+    AllowAnonymousAccess,
 )
 from project.models import Project, Issue, Comment
 from project.serializers import (
@@ -56,35 +57,38 @@ class ProjectViewSet(
 
         :return: List of permissions.
         """
-        if self.request.user.is_authenticated:
-            if self.action == "list" or self.action == "retrieve":
-                return [IsProjectContributorAuthor()]
-            elif self.action in [
-                "create",
-                "update",
-                "partial_update",
-                "destroy",
-            ]:
-                return [IsProjectAuthor()]
+        if not self.request.user.is_authenticated:
+            permission_classes = [AllowAnonymousAccess]
+        elif self.action == "list" or self.action == "retrieve":
+            print("je suis dans list")
+            permission_classes = [IsProjectContributorAuthor]
+        elif self.action in [
+            "create",
+            "update",
+            "partial_update",
+            "destroy",
+        ]:
+            print("je suis dans create")
+            permission_classes = [IsProjectAuthor]
+        else:
+            permission_classes = []
 
-        return []
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         """
-        Returns the appropriate serializer class based on the view action.
+        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
 
-        :return: Serializer class.
+        :return: Classe de sérialiseur.
         """
-        if self.action == "list":
-            return self.serializer_list_class
-        elif self.action == "retrieve":
-            return self.serializer_detail_class
-        elif self.action == "create":
-            return self.serializer_create_class
-        elif self.action == "update" or self.action == "partial_update":
-            return self.serializer_update_class
-        else:
-            return self.serializer_class
+        serializer_mapping = {
+            "list": self.serializer_list_class,
+            "retrieve": self.serializer_detail_class,
+            "create": self.serializer_create_class,
+            "update": self.serializer_update_class,
+            "partial_update": self.serializer_update_class,
+        }
+        return serializer_mapping.get(self.action, self.serializer_class)
 
     _project = None
 
@@ -174,11 +178,17 @@ class ContributorViewSet(viewsets.ModelViewSet):
 
         :return: List of permissions.
         """
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [Contributor_IsAuthor()]
+        if not self.request.user.is_authenticated:
+            permission_classes = [AllowAnonymousAccess]
+
+        elif self.action in ["create", "update", "partial_update", "destroy"]:
+            permission_classes = [Contributor_IsAuthor]
         elif self.action == "list":
-            return [Contributor_IsContributor()]
-        return []
+            permission_classes = [Contributor_IsContributor]
+        else:
+            permission_classes = []
+
+        return [permission() for permission in permission_classes]
 
     _project = None
 
@@ -255,21 +265,17 @@ class IssueViewSet(
         """
         Define permissions for different actions.
         """
-        if self.request.user.is_authenticated:
-            if self.action == "list" or self.action == "retrieve":
-                return [CanViewIssue()]
-            elif self.action in [
-                "update",
-                "partial_update",
-                "destroy",
-            ]:
-                return [CanModifyOrDeleteIssue()]
-            elif self.action in [
-                "create",
-            ]:
-                return [CanCreateIssue()]
 
-        return []
+        if not self.request.user.is_authenticated:
+            permission_classes = [AllowAnonymousAccess]
+
+        elif self.action in ["update", "partial_update", "destroy"]:
+            permission_classes = [CanModifyOrDeleteIssue]
+        elif self.action == "create":
+            permission_classes = [CanCreateIssue]
+        else:
+            permission_classes = []
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         """
@@ -351,21 +357,25 @@ class CommentViewSet(
         """
         Define permissions for different actions.
         """
-        if self.request.user.is_authenticated:
+        if not self.request.user.is_authenticated:
+            permission_classes = [AllowAnonymousAccess]
             if self.action == "list" or self.action == "retrieve":
-                return [CanViewComment()]
+                permission_classes = [CanViewComment]
             elif self.action in [
                 "update",
                 "partial_update",
                 "destroy",
             ]:
-                return [CanModifyOrDeleteComment()]
+                permission_classes = [CanModifyOrDeleteComment]
             elif self.action in [
                 "create",
             ]:
-                return [CanCreateComment()]
+                permission_classes = [CanCreateComment]
 
-        return []
+        else:
+            permission_classes = []
+
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         """
