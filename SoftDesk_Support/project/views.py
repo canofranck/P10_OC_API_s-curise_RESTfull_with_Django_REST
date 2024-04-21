@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
 
+from project.SerializerMixin import SerializerMixin
 from project.permissions import (
     IsProjectAuthor,
     IsProjectContributorAuthor,
@@ -38,18 +39,26 @@ from django.conf import settings
 UserModel = get_user_model()
 
 
-class ProjectViewSet(
-    viewsets.ModelViewSet,
-):
+class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
     """
     ViewSet for managing projects.
     """
 
-    serializer_class = ProjectCreateSerializer
-    serializer_create_class = ProjectCreateSerializer
-    serializer_detail_class = ProjectDetailSerializer
-    serializer_list_class = ProjectListSerializer
-    serializer_update_class = ProjectUpdateSerializer
+    serializer_mapping = {
+        "list": ProjectListSerializer,
+        "retrieve": ProjectDetailSerializer,
+        "create": ProjectCreateSerializer,
+        "update": ProjectUpdateSerializer,
+        "partial_update": ProjectUpdateSerializer,
+    }
+
+    def get_serializer_class(self):
+        """
+        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
+
+        :return: Classe de sérialiseur.
+        """
+        return self.serializer_mapping.get(self.action, self.serializer_class)
 
     def get_permissions(self):
         """
@@ -74,21 +83,6 @@ class ProjectViewSet(
             permission_classes = []
 
         return [permission() for permission in permission_classes]
-
-    def get_serializer_class(self):
-        """
-        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
-
-        :return: Classe de sérialiseur.
-        """
-        serializer_mapping = {
-            "list": self.serializer_list_class,
-            "retrieve": self.serializer_detail_class,
-            "create": self.serializer_create_class,
-            "update": self.serializer_update_class,
-            "partial_update": self.serializer_update_class,
-        }
-        return serializer_mapping.get(self.action, self.serializer_class)
 
     _project = None
 
@@ -246,9 +240,7 @@ class ContributorViewSet(viewsets.ModelViewSet):
             )
 
 
-class IssueViewSet(
-    viewsets.ModelViewSet,
-):
+class IssueViewSet(viewsets.ModelViewSet, SerializerMixin):
     """
     A simple ViewSet for creating, viewing and editing issues
     - The queryset is based on the project
@@ -256,10 +248,21 @@ class IssueViewSet(
       or to another contributor
     """
 
-    serializer_class = IssueListSerializer
-    serializer_create_class = IssueCreateSerializer
-    serializer_detail_class = IssueDetailSerializer
-    serializer_list_class = IssueListSerializer
+    serializer_mapping = {
+        "list": IssueListSerializer,
+        "retrieve": IssueDetailSerializer,
+        "create": IssueCreateSerializer,
+        "update": IssueDetailSerializer,
+        "partial_update": IssueDetailSerializer,
+    }
+
+    def get_serializer_class(self):
+        """
+        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
+
+        :return: Classe de sérialiseur.
+        """
+        return self.serializer_mapping.get(self.action, self.serializer_class)
 
     def get_permissions(self):
         """
@@ -276,21 +279,6 @@ class IssueViewSet(
         else:
             permission_classes = []
         return [permission() for permission in permission_classes]
-
-    def get_serializer_class(self):
-        """
-        Return the serializer class based on the action.
-        """
-        if self.action == "list":
-            return self.serializer_list_class
-        elif self.action == "retrieve":
-            return self.serializer_detail_class
-        elif self.action == "create":
-            return self.serializer_create_class
-        elif self.action == "update" or self.action == "partial_update":
-            return self.serializer_detail_class
-        else:
-            return self.serializer_class
 
     _issue = None
 
@@ -339,19 +327,28 @@ class IssueViewSet(
         self.project = project  # Define project attribute in view
 
 
-class CommentViewSet(
-    viewsets.ModelViewSet,
-):
+class CommentViewSet(viewsets.ModelViewSet, SerializerMixin):
     """
     A simple ViewSet for creating, viewing and editing comments
     - The queryset is based on the issue
     - Creates the issue_url
     """
 
-    serializer_class = CommentListSerializer
-    serializer_create_class = CommentCreateSerializer
-    serializer_detail_class = CommentDetailSerializer
-    serializer_list_class = CommentListSerializer
+    serializer_mapping = {
+        "list": CommentListSerializer,
+        "retrieve": CommentDetailSerializer,
+        "create": CommentCreateSerializer,
+        "update": CommentDetailSerializer,
+        "partial_update": CommentDetailSerializer,
+    }
+
+    def get_serializer_class(self):
+        """
+        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
+
+        :return: Classe de sérialiseur.
+        """
+        return self.serializer_mapping.get(self.action, self.serializer_class)
 
     def get_permissions(self):
         """
@@ -375,21 +372,6 @@ class CommentViewSet(
             permission_classes = []
 
         return [permission() for permission in permission_classes]
-
-    def get_serializer_class(self):
-        """
-        Return the serializer class based on the action.
-        """
-        if self.action == "list":
-            return self.serializer_list_class
-        elif self.action == "retrieve":
-            return self.serializer_detail_class
-        elif self.action == "create":
-            return self.serializer_create_class
-        elif self.action == "update" or self.action == "partial_update":
-            return self.serializer_detail_class
-        else:
-            return self.serializer_class
 
     _comment = None
 
