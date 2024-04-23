@@ -12,9 +12,7 @@ class IsProjectContributorAuthor(permissions.BasePermission):
         """
         Check if the requesting user is a contributor or author of the project.
         """
-        print("Requesting User:", request.user)
-        print("Project Contributors:", obj.contributors.all())
-        print("Project Author:", obj.author)
+
         if (
             request.user in obj.contributors.all()
             or obj.author == request.user
@@ -43,27 +41,28 @@ class Contributor_IsContributor(permissions.BasePermission):
     Permission to allow only contributors to a project to view the list of contributors.
     """
 
+    def has_permission(self, request, view):
+        """
+        Check if the requesting user is a contributor of the associated project,
+        or if the user is the author of the project.
+        """
+        # Récupère l'objet Project associé à la vue
+        project = view.project
 
-def has_permission(self, request, view):
-    """
-    Check if the requesting user is a contributor of the associated project,
-    or if the user is the author of the project.
-    """
-    # Récupère l'objet Project associé à la vue
-    project = view.project
+        # Vérifie si l'utilisateur est connecté
+        if not request.user.is_authenticated:
+            return False  # Si l'utilisateur n'est pas connecté, retourne False
 
-    # Vérifie si l'utilisateur est connecté
-    if not request.user.is_authenticated:
-        return False  # Si l'utilisateur n'est pas connecté, retourne False
+        # Vérifie si l'utilisateur est un contributeur du projet
+        is_contributor = project.contributors.filter(
+            id=request.user.id
+        ).exists()
+        print(is_contributor)
+        # Vérifie si l'utilisateur est l'auteur du projet
+        is_author = project.author == request.user
 
-    # Vérifie si l'utilisateur est un contributeur du projet
-    is_contributor = project.contributors.filter(id=request.user.id).exists()
-
-    # Vérifie si l'utilisateur est l'auteur du projet
-    is_author = project.author == request.user
-
-    # La permission est accordée si l'utilisateur est soit un contributeur soit l'auteur du projet
-    return is_contributor or is_author
+        # La permission est accordée si l'utilisateur est soit un contributeur soit l'auteur du projet
+        return is_contributor or is_author
 
 
 class Contributor_IsAuthor(permissions.BasePermission):
@@ -83,11 +82,10 @@ class Contributor_IsAuthor(permissions.BasePermission):
             user_id = request.user.id
         else:
             return False  # Si l'utilisateur n'est pas connecté, retourne False
-        print("projet id ", project_id, " userid", user_id)
 
         # Vérifie si l'utilisateur est l'auteur du projet
         project = Project.objects.get(pk=project_id)
-        print(project.author_id)
+
         if project.author_id == user_id:
 
             return True
@@ -236,17 +234,27 @@ class CanCreateComment(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        """
-        Checks if the user has permission to create a comment.
+        # Check if the user is authenticated
+        if request.user.is_authenticated:
+            # Check if the user is a contributor of the project
+            project_id = view.kwargs.get(
+                "project_pk"
+            )  # Get the project ID from the view's kwargs
+            # Vérifie si l'utilisateur est l'auteur du projet
+            is_author = Project.objects.filter(
+                id=project_id, author=request.user
+            ).exists()
 
-        """
+            # Vérifie si l'utilisateur est un contributeur du projet
+            is_contributor = Project.objects.filter(
+                id=project_id, contributors=request.user
+            ).exists()
 
-        # Get the Issue object based on the issue ID in the request
-        issue_id = view.kwargs.get("issue_pk")
-        issue = Issue.objects.get(id=issue_id)
+            return (
+                is_author or is_contributor
+            )  # Autorise la création de l'issue pour l'auteur du projet ou les contributeurs
 
-        # Check if the user is a contributor of the project associated with the issue
-        return request.user in issue.project.contributors.all()
+        return False  # Refuse la création de l'issue pour les utilisateurs non authentifiés
 
 
 class AllowAnonymousAccess(permissions.BasePermission):

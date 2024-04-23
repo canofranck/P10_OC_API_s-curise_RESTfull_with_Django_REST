@@ -124,7 +124,7 @@ class ContributorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ["id", "user"]
+        fields = ["id", "user", "username"]
 
     def validate_user(self, value):
         """

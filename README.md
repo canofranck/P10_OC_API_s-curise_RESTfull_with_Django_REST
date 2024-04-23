@@ -114,18 +114,23 @@ Pour changer d utilisateur il faut repasser par l'adresse de depart de l API : h
 | 3   | Refresh Token de l'utilisateur                                            | POST           | /api/token/refresh/                                              |
 | 4   | Récupérer la liste de tous les projets rattachés à l'utilisateur connecté | GET            | /api/projects                                                    |
 | 5   | Créer un projet                                                           | POST           | /api/projects/                                                   |
-| 6   | Récupérer les détails d'un projet via son id                              | GET            | /api/projects/:ID_PROJET/                                        |
-| 7   | Mettre à jour un projet                                                   | PATCH          | /api/projects/:ID_PROJET/                                        |
-| 8   | Supprimer un projet et ses problèmes                                      | DELETE         | /api/projects/:ID_PROJET/                                        |
-| 9   | Ajouter un utilisateur (collaborateur) à un projet                        | POST           | /api/projects/:ID_PROJET/contributors/                           |
-| 10  | Récupérer la liste de tous les utilisateurs attachés à un projet          | GET            | /api/projects/:ID_PROJET/contributors/                           |
-| 11  | Supprimer un (collaborateur) utilisateur d'un projet                      | DELETE         | /api/projects/:ID_PROJET/contributors/:ID_CONTRIBUTOR/           |
-| 12  | Récupérer la liste des Issues liés à un projet                            | GET            | /api/projects/:ID_PROJET/issues/                                 |
-| 13  | Créer une Issue dans un projet                                            | POST           | /api/projects/:ID_PROJET/issues/                                 |
-| 14  | Mettre à jour une Issue dans un projet                                    | PATCH          | /api/projects/:ID_PROJET/issues/:ID_ISSUE/                       |
-| 15  | Supprimer une Issue d'un projet                                           | DELETE         | /api/projects/:ID_PROJET/issues/:ID_ISSUE/                       |
-| 16  | Recupérer la listes des Comments d une issu liés a un projet              | GET            | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/              |
-| 17  | Créer un Comments dans une Issue                                          | POST           | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/              |
-| 18  | Mettre à jour un Comments dans une Issue                                  | PATCH          | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/:ID_COMMENTS/ |
-| 19  | Supprimer un Comments d une issu                                          | DELETE         | /api/projects/:ID_PROJET/issues/:ID_ISSUE/comments/:ID_COMMENTS/ |
-
+| 6   | Récupérer les détails d'un projet via son id                              | GET            | /api/projects/:id_projet/                                        |
+| 7   | Mettre à jour un projet                                                   | PATCH          | /api/projects/:id_projet/                                        |
+| 8   | Supprimer un projet et ses problèmes                                      | DELETE         | /api/projects/:id_projet/                                        |
+| 9   | Ajouter un utilisateur (contributeur) à un projet                         | POST           | /api/projects/:id_projet/contributors/                           |
+| 10  | Récupérer la liste de tous les contributeurs attachés à un projet         | GET            | /api/projects/:id_projet/contributors/                           |
+| 11  | Détails d'un (collaborateur) utilisateur d'un projet                      | GET            | /api/projects/:id_projet/contributors/:id_contributor/           |
+| 12  | Supprimer un (collaborateur) utilisateur d'un projet                      | DELETE         | /api/projects/:id_projet/contributors/:id_contributor/           |
+| 13  | Récupérer la liste des Issues liés à un projet                            | GET            | /api/projects/:id_projet/issues/                                 |
+| 14  | Créer une Issue dans un projet                                            | POST           | /api/projects/:id_projet/issues/                                 |
+| 15  | Mettre à jour une Issue dans un projet                                    | PATCH          | /api/projects/:id_projet/issues/:id_issue/                       |
+| 16  | Supprimer une Issue d'un projet                                           | DELETE         | /api/projects/:id_projet/issues/:id_issue/                       |
+| 17  | Recupérer la listes des Comments d une issu liés a un projet              | GET            | /api/projects/:id_projet/issues/:id_issue/comments/              |
+| 18  | Créer un Comments dans une Issue                                          | POST           | /api/projects/:id_projet/issues/:id_issue/comments/              |
+| 19  | Mettre à jour un Comments dans une Issue                                  | PATCH          | /api/projects/:id_projet/issues/:id_issue/comments/:id_comments/ |
+| 20  | Supprimer un Comments d une issu                                          | DELETE         | /api/projects/:id_projet/issues/:id_issue/comments/:id_comments/ |
+| 21  | Liste de tout les projets pour les administrateurs                        | GET            | /api/admin/projects/                                             |
+| 22  | Liste de tout les utilsateurs pour les administrateurs                    | GET            | /api/user/                                                       |
+| 23  | Details d'un utilisateur.(seulement le sien sauf pour les administrateurs)| GET            | /api/user/:id_utilisateur/                                       |
+| 24  | Modifier un utilisateur.(seulement le sien sauf pour les administrateurs) | PATCH          | /api/user/:id_utilisateur/                                       |
+| 25  | Supprimer un utilisateur.(seulement le sien sauf pour les administrateurs)| DELETE         | /api/user/:id_utilisateur/                                       |

@@ -14,15 +14,10 @@ class IsAdminAuthenticated(BasePermission):
         )
 
 
-class IsAuthenticated(BasePermission):
-    """
-    Custom permission to allow only authenticated users.
-    """
-
-    def has_permission(self, request, view):
-        if request.method == "POST":
-            return True  # Autoriser les requêtes POST sans authentification
-        return bool(request.user and request.user.is_authenticated)
+class IsOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Vérifie si l'utilisateur est l'administrateur ou le propriétaire de l'objet
+        return request.user.is_superuser or obj == request.user
 
 
 class IsAdminOrReadOnly(BasePermission):

@@ -2,7 +2,7 @@ from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets
-
+from rest_framework import permissions
 from project.SerializerMixin import SerializerMixin
 from project.permissions import (
     IsProjectAuthor,
@@ -69,7 +69,6 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
         if not self.request.user.is_authenticated:
             permission_classes = [AllowAnonymousAccess]
         elif self.action == "list" or self.action == "retrieve":
-            print("je suis dans list")
             permission_classes = [IsProjectContributorAuthor]
         elif self.action in [
             "create",
@@ -77,7 +76,6 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
             "partial_update",
             "destroy",
         ]:
-            print("je suis dans create")
             permission_classes = [IsProjectAuthor]
         else:
             permission_classes = []
@@ -158,7 +156,7 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
 class AdminProjectListView(viewsets.ReadOnlyModelViewSet):
     serializer_class = ProjectListSerializer
     queryset = Project.objects.all()
-    # permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [permissions.IsAdminUser]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -187,7 +185,7 @@ class ContributorViewSet(viewsets.ModelViewSet):
 
         elif self.action in ["create", "update", "partial_update", "destroy"]:
             permission_classes = [Contributor_IsAuthor]
-        elif self.action == "list":
+        elif self.action in ["list", "retrieve"]:
             permission_classes = [Contributor_IsContributor]
         else:
             permission_classes = []
@@ -281,7 +279,8 @@ class IssueViewSet(viewsets.ModelViewSet, SerializerMixin):
 
         if not self.request.user.is_authenticated:
             permission_classes = [AllowAnonymousAccess]
-
+        elif self.action in ["list", "retrieve"]:
+            permission_classes = [CanViewIssue]
         elif self.action in ["update", "partial_update", "destroy"]:
             permission_classes = [CanModifyOrDeleteIssue]
         elif self.action == "create":
@@ -366,7 +365,8 @@ class CommentViewSet(viewsets.ModelViewSet, SerializerMixin):
         """
         if not self.request.user.is_authenticated:
             permission_classes = [AllowAnonymousAccess]
-
+        elif self.action in ["list", "retrieve"]:
+            permission_classes = [CanViewComment]
         elif self.action in [
             "update",
             "partial_update",
