@@ -104,7 +104,8 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
             )
 
             # Combinaison des projets où l'utilisateur est soit l'auteur soit un contributeur
-            self._project = author_projects | contributor_projects
+            # Distinct empeche d avoir des projet en double
+            self._project = (author_projects | contributor_projects).distinct()
 
         return self._project
 
