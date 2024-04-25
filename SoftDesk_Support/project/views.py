@@ -163,11 +163,32 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
 
 
 class AdminProjectListView(viewsets.ReadOnlyModelViewSet):
+    """
+    A read-only view set for listing projects in the admin interface.
+
+    This view set is designed to list projects in the admin interface. It only allows
+    administrators to access the list of projects.
+    """
+
     serializer_class = ProjectListSerializer
     queryset = Project.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def list(self, request, *args, **kwargs):
+        """
+        List all projects.
+
+        Retrieves a list of all projects available in the system and returns
+        them as serialized data.
+
+        Args:
+            request: The request object.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: A response containing serialized data of all projects.
+        """
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)

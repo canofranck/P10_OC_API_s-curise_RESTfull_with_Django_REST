@@ -164,4 +164,13 @@ class Comment(models.Model):
     issue_url = models.URLField(blank=True, verbose_name=("issue_link"))
 
     def __str__(self):
+        """
+        Returns a string representation of the Comment object.
+
+        This method returns a string representing the Comment object
+        with its name and the associated issue.
+
+        Returns:
+            str: A string representation of the Comment object.
+        """
         return f"{self.name} | {self.issue}"

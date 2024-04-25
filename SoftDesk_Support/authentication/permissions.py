@@ -15,6 +15,13 @@ class IsAdminAuthenticated(BasePermission):
 
 
 class IsOwner(BasePermission):
+    """
+    Custom permission to check if the user is the owner of the object.
+
+    This permission checks whether the current user is the owner of the object
+    or if they are a superuser. If so, permission is granted.
+    """
+
     def has_object_permission(self, request, view, obj):
 
         return request.user.is_superuser or obj == request.user

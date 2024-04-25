@@ -4,6 +4,9 @@ from django.core.validators import MinValueValidator
 
 
 class CustomUser(AbstractUser):
+    """
+    Custom user model extending the AbstractUser.
+    """
 
     username = models.CharField(max_length=255, unique=True)
     age = models.PositiveSmallIntegerField(
@@ -20,4 +23,9 @@ class CustomUser(AbstractUser):
     )
 
     def __str__(self):
+        """
+        Returns the string representation of the user.
+
+        :return: Username of the user.
+        """
         return self.username
