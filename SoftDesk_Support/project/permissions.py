@@ -1,4 +1,3 @@
-# from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework import permissions
 from project.models import Project, Issue
 
@@ -46,22 +45,16 @@ class Contributor_IsContributor(permissions.BasePermission):
         Check if the requesting user is a contributor of the associated project,
         or if the user is the author of the project.
         """
-        # Récupère l'objet Project associé à la vue
+
         project = view.project
-
-        # Vérifie si l'utilisateur est connecté
         if not request.user.is_authenticated:
-            return False  # Si l'utilisateur n'est pas connecté, retourne False
+            return False
 
-        # Vérifie si l'utilisateur est un contributeur du projet
         is_contributor = project.contributors.filter(
             id=request.user.id
         ).exists()
-        print(is_contributor)
-        # Vérifie si l'utilisateur est l'auteur du projet
         is_author = project.author == request.user
 
-        # La permission est accordée si l'utilisateur est soit un contributeur soit l'auteur du projet
         return is_contributor or is_author
 
 
@@ -74,18 +67,15 @@ class Contributor_IsAuthor(permissions.BasePermission):
         """
         Check if the user is the author of the project associated with the contributor.
         """
-        # Récupère l'ID du projet à partir de l'URL de la vue
+
         project_id = view.kwargs.get("project_pk")
 
-        # Vérifie si l'utilisateur est connecté et récupère son ID
         if request.user.is_authenticated:
             user_id = request.user.id
         else:
-            return False  # Si l'utilisateur n'est pas connecté, retourne False
+            return False
 
-        # Vérifie si l'utilisateur est l'auteur du projet
         project = Project.objects.get(pk=project_id)
-
         if project.author_id == user_id:
 
             return True
@@ -103,17 +93,14 @@ class CanViewIssue(permissions.BasePermission):
         """
         Check if the user has permission to view the issue.
         """
-        # Check if the user is authenticated
+
         if request.user and request.user.is_authenticated:
-            # Check if the user is a contributor or the author of the project
-            project_id = request.resolver_match.kwargs.get(
-                "project_pk"
-            )  # Get the project ID from the view's kwargs
-            # Check if the user is a contributor to the project
+
+            project_id = request.resolver_match.kwargs.get("project_pk")
             project = Project.objects.filter(
                 id=project_id, contributors=request.user
             ).exists()
-            # Check if the user is the author of the project
+
             project_author = Project.objects.filter(
                 id=project_id, author=request.user
             ).exists()
@@ -122,11 +109,13 @@ class CanViewIssue(permissions.BasePermission):
                 project or project_author
             )  # Allow access for contributors or the author of the project
 
-        return False  # Deny access for unauthenticated users
+        return False
 
 
 class CanModifyOrDeleteIssue(permissions.BasePermission):
-    """Customize permissions to allow only authenticated users to modify or delete issues, and authorize the issue author to perform these actions."""
+    """Customize permissions to allow only authenticated users to
+    modify or delete issues, and authorize the issue author to perform these actions.
+    """
 
     message = "You are not authorized to modify or delete this issue."
 
@@ -136,10 +125,9 @@ class CanModifyOrDeleteIssue(permissions.BasePermission):
 
         """
 
-        # Check if the user is authenticated
         if request.user.is_authenticated:
-            return True  # Allow access for authenticated users
-        return False  # Deny access for unauthenticated users
+            return True
+        return False
 
     def has_object_permission(self, request, view, obj):
         """
@@ -147,10 +135,9 @@ class CanModifyOrDeleteIssue(permissions.BasePermission):
 
         """
 
-        # Check if the user is the author of the issue
         if obj.author == request.user:
-            return True  # Allow modification or deletion for the author of the issue
-        return False  # Deny modification or deletion for other users
+            return True
+        return False
 
 
 class CanCreateIssue(permissions.BasePermission):
@@ -158,7 +145,7 @@ class CanCreateIssue(permissions.BasePermission):
     Custom permission to allow only project contributors to create issues.
     """
 
-    message = "You are not authorized to create an issue for this project."  # Message displayed when permission is denied
+    message = "You are not authorized to create an issue for this project."
 
     def has_permission(self, request, view):
         """
@@ -166,27 +153,19 @@ class CanCreateIssue(permissions.BasePermission):
 
         """
 
-        # Check if the user is authenticated
         if request.user.is_authenticated:
-            # Check if the user is a contributor of the project
-            project_id = view.kwargs.get(
-                "project_pk"
-            )  # Get the project ID from the view's kwargs
-            # Vérifie si l'utilisateur est l'auteur du projet
+
+            project_id = view.kwargs.get("project_pk")
             is_author = Project.objects.filter(
                 id=project_id, author=request.user
             ).exists()
-
-            # Vérifie si l'utilisateur est un contributeur du projet
             is_contributor = Project.objects.filter(
                 id=project_id, contributors=request.user
             ).exists()
 
-            return (
-                is_author or is_contributor
-            )  # Autorise la création de l'issue pour l'auteur du projet ou les contributeurs
+            return is_author or is_contributor
 
-        return False  # Refuse la création de l'issue pour les utilisateurs non authentifiés
+        return False
 
 
 class CanViewComment(permissions.BasePermission):
@@ -201,11 +180,8 @@ class CanViewComment(permissions.BasePermission):
 
         """
 
-        # Get the Project object based on the project ID in the request
         project_id = view.kwargs.get("project_pk")
         project = Project.objects.get(id=project_id)
-
-        # Check if the user is the project author or a project contributor
 
         return (
             request.user == project.author
@@ -223,7 +199,7 @@ class CanModifyOrDeleteComment(permissions.BasePermission):
         """
         Vérifie si l'utilisateur a la permission de modifier ou supprimer un commentaire.
         """
-        # Vérifie si l'utilisateur est l'auteur du commentaire
+
         return obj.author.id == request.user.id
 
 
@@ -234,27 +210,18 @@ class CanCreateComment(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        # Check if the user is authenticated
+
         if request.user.is_authenticated:
-            # Check if the user is a contributor of the project
-            project_id = view.kwargs.get(
-                "project_pk"
-            )  # Get the project ID from the view's kwargs
-            # Vérifie si l'utilisateur est l'auteur du projet
+            project_id = view.kwargs.get("project_pk")
             is_author = Project.objects.filter(
                 id=project_id, author=request.user
             ).exists()
-
-            # Vérifie si l'utilisateur est un contributeur du projet
             is_contributor = Project.objects.filter(
                 id=project_id, contributors=request.user
             ).exists()
 
-            return (
-                is_author or is_contributor
-            )  # Autorise la création de l'issue pour l'auteur du projet ou les contributeurs
-
-        return False  # Refuse la création de l'issue pour les utilisateurs non authentifiés
+            return is_author or is_contributor
+        return False
 
 
 class AllowAnonymousAccess(permissions.BasePermission):

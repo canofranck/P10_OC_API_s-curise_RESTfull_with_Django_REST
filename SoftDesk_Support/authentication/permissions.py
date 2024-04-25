@@ -16,7 +16,7 @@ class IsAdminAuthenticated(BasePermission):
 
 class IsOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
-        # Vérifie si l'utilisateur est l'administrateur ou le propriétaire de l'objet
+
         return request.user.is_superuser or obj == request.user
 
 
@@ -43,8 +43,8 @@ class IsAdminOrOwnerOrReadOnly(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
-        # Autoriser les administrateurs à accéder à tous les profils
+
         if request.user.is_staff:
             return True
-        # Permettre aux utilisateurs de modifier leur propre profil
+
         return obj == request.user

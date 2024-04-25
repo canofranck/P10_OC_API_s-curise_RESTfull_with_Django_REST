@@ -43,12 +43,8 @@ class ProjectListSerializer(serializers.ModelSerializer):
     Serializer for listing projects.
     """
 
-    author = CustomUserAuthorContributorSerializer(
-        many=False
-    )  # Display user in the author project list
-    contributors = CustomUserAuthorContributorSerializer(
-        many=True
-    )  # Display user in the contributor project list
+    author = CustomUserAuthorContributorSerializer(many=False)
+    contributors = CustomUserAuthorContributorSerializer(many=True)
 
     class Meta:
         model = Project
@@ -65,12 +61,8 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
     Serializer for displaying detailed information about a project.
     """
 
-    author = CustomUserAuthorContributorSerializer(
-        many=False
-    )  # Display user in the author project list
-    contributors = CustomUserAuthorContributorSerializer(
-        many=True
-    )  # Display user in the contributor project list
+    author = CustomUserAuthorContributorSerializer(many=False)
+    contributors = CustomUserAuthorContributorSerializer(many=True)
 
     class Meta:
         model = Project
@@ -187,11 +179,7 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         Validate the provided data for creating an issue.
         """
         assigned_to = attrs.get("assigned_to")
-
-        # Retrieve the project from the view context
         project = self.context["view"].project
-
-        # Check if the assigned user is a contributor to the project
         if (
             assigned_to not in project.contributors.all()
             and assigned_to != project.author

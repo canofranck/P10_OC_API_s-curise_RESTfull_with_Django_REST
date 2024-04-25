@@ -1,6 +1,7 @@
 class SerializerMixin:
     """
-    Mixin pour la récupération de la classe de sérialiseur appropriée en fonction de l'action de vue.
+    Mixin for retrieving the appropriate serializer class
+    according to the view action.
     """
 
     serializer_mapping = {
@@ -13,8 +14,8 @@ class SerializerMixin:
 
     def get_serializer_class(self):
         """
-        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
+        Returns the appropriate serializer class according to the view action.
 
-        :return: Classe de sérialiseur.
+        :return: serializer class
         """
         return self.serializer_mapping.get(self.action, self.serializer_class)
