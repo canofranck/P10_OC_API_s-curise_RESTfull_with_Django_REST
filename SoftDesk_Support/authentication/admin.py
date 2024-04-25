@@ -10,7 +10,7 @@ class UserAdmin(admin.ModelAdmin):
         "is_superuser",
         "is_staff",
         "is_active",
-        "age",
+        "date_of_birth",
         "can_be_contacted",
         "can_data_be_shared",
         "created_time",

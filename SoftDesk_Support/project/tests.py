@@ -37,7 +37,7 @@ User = get_user_model()
 #         data = {
 #             "username": "testuser",
 #             "password": "password123",
-#             "age": 25,
+#             "date_of_birth": 25,
 #             "can_be_contacted": True,
 #             "can_data_be_shared": True,
 #         }

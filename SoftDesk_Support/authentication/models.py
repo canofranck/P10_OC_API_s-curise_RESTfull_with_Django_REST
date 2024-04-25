@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
+from datetime import date
 
 
 class CustomUser(AbstractUser):
@@ -9,9 +10,13 @@ class CustomUser(AbstractUser):
     """
 
     username = models.CharField(max_length=255, unique=True)
-    age = models.PositiveSmallIntegerField(
-        default=15, validators=[MinValueValidator(15)], verbose_name=("age")
+    date_of_birth = models.DateField(
+        verbose_name=("date de naissance"), default=date.today
     )
+
+    # age = models.PositiveSmallIntegerField(
+    #     default=15, validators=[MinValueValidator(15)], verbose_name=("age")
+    # )
     can_be_contacted = models.BooleanField(
         default=False, verbose_name=("contact consent")
     )

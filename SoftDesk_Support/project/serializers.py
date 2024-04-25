@@ -150,7 +150,7 @@ class ContributorDetailSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "username",
-            "age",
+            "date_of_birth",
             "can_be_contacted",
             "can_data_be_shared",
         ]
