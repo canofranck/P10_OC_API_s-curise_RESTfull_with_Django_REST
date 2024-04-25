@@ -54,9 +54,9 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
 
     def get_serializer_class(self):
         """
-        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
+        Returns the appropriate serializer class according to the view action.
 
-        :return: Classe de sérialiseur.
+        :return: serializer class.
         """
         return self.serializer_mapping.get(self.action, self.serializer_class)
 
@@ -82,29 +82,37 @@ class ProjectViewSet(viewsets.ModelViewSet, SerializerMixin):
 
         return [permission() for permission in permission_classes]
 
+    # Application of GREEN CODE: this 'project' property retrieves the project associated with the logged-in user,
+    # thus avoiding excessive database queries. It combines projects where the user is either the author,
+    # or a contributor, to optimize data retrieval.
     _project = None
 
     @property
     def project(self):
         """
-        Returns the project associated with the logged-in user.
+        Retrieves the project associated with the logged-in user.
 
-        :return: Project object or None.
+        This property aims to optimize data retrieval and minimize database queries.
+        It retrieves the project associated with the currently authenticated user,
+        either as an author or a contributor.
+
+        :return: The Project object associated with the logged-in user, or None if the user is not authenticated.
         """
+
         # avoids error if user anonymous
         if self._project is None and self.request.user.is_authenticated:
-            # Recherche les projets où l'utilisateur est l'auteur
+            # Search for projects where the user is the author
             author_projects = Project.objects.filter(
                 author_id=self.request.user.id
             )
 
-            # Recherche les projets où l'utilisateur est un contributeur
+            # Search for projects where the user is a contributor
             contributor_projects = Project.objects.filter(
                 contributors=self.request.user
             )
 
-            # Combinaison des projets où l'utilisateur est soit l'auteur soit un contributeur
-            # Distinct empeche d avoir des projet en double
+            # Combination of projects where the user is either the author or a contributor
+            # Distinct prevents duplicate projects
             self._project = (author_projects | contributor_projects).distinct()
 
         return self._project
@@ -193,14 +201,27 @@ class ContributorViewSet(viewsets.ModelViewSet):
 
         return [permission() for permission in permission_classes]
 
+    # Application of GREEN CODE: avoid excessive queries by storing the project
+    # If the view instantiates the project several times, a query is not performed each time
     _project = None
 
     @property
     def project(self):
-        """create an attribute project inside the ContributorViewSet
-        this attribute is available in the view and can be called/available in the serializer
         """
+        Retrieves the project associated with the logged-in user by prefetching contributors.
 
+        This property is used to retrieve the project associated with the logged-in user. By using
+        prefetch_related("contributors"), the contributors associated with the project are prefetched,
+        reducing the number of SQL queries needed to fetch contributor data when they are accessed later.
+        This improves application performance by minimizing the total number of SQL queries sent to the
+        database.
+        Additionally, prefetch_related performs a join between the Project and Contributor tables at the database
+        level, fetching all necessary data in a single query rather than multiple separate ones. This significantly
+        reduces latency and query processing time, which is beneficial for application performance.
+
+        Returns:
+            Project: The Project object associated with the logged-in user.
+        """
         # If the view was never executed before, it will make the database query
         # Otherwise, _project will have a value and no database query will be performed
         if self._project is None:
@@ -267,9 +288,9 @@ class IssueViewSet(viewsets.ModelViewSet, SerializerMixin):
 
     def get_serializer_class(self):
         """
-        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
+        Returns the appropriate serializer class according to the view action.
 
-        :return: Classe de sérialiseur.
+        :return: serializer class.
         """
         return self.serializer_mapping.get(self.action, self.serializer_class)
 
@@ -290,13 +311,23 @@ class IssueViewSet(viewsets.ModelViewSet, SerializerMixin):
             permission_classes = []
         return [permission() for permission in permission_classes]
 
+    # Implementation of GREEN CODE: This 'issue' property retrieves issues related to the project,
+    # minimizing database queries. It caches the retrieved issues to avoid repeated database calls.
+
     _issue = None
 
     @property
     def issue(self):
         """
-        Retrieve issues related to the project.
+        Retrieves issues related to the project.
+
+        This property aims to retrieve issues associated with a specific project,
+        minimizing database queries.
+
+        Returns:
+            QuerySet: A queryset containing the issues related to the project.
         """
+
         if self._issue is None:
             self._issue = Issue.objects.filter(
                 project_id=self.kwargs["project_pk"]
@@ -312,7 +343,12 @@ class IssueViewSet(viewsets.ModelViewSet, SerializerMixin):
         project = get_object_or_404(Project, id=self.kwargs["project_pk"])
 
         # Filter the complete list of users to include only project contributors
-        queryset = Issue.objects.filter(project=project)
+        # Retrieves the list of issues associated with the project,
+        # while prefetching comments and assigned users
+        # to optimize data retrieval performance.
+        queryset = Issue.objects.filter(project=project).prefetch_related(
+            "comments", "assigned_to"
+        )
         return queryset.order_by("created_time")
 
     def perform_create(self, serializer):
@@ -354,9 +390,9 @@ class CommentViewSet(viewsets.ModelViewSet, SerializerMixin):
 
     def get_serializer_class(self):
         """
-        Retourne la classe de sérialiseur appropriée en fonction de l'action de vue.
+        Returns the appropriate serializer class according to the view action.
 
-        :return: Classe de sérialiseur.
+        :return: serializer class
         """
         return self.serializer_mapping.get(self.action, self.serializer_class)
 
@@ -384,13 +420,24 @@ class CommentViewSet(viewsets.ModelViewSet, SerializerMixin):
 
         return [permission() for permission in permission_classes]
 
+    # GREEN CODE implementation: This 'comment' property retrieves comments related to the issue,
+    # minimizing database queries. It caches the retrieved comments to avoid repeated database calls.
+
     _comment = None
 
     @property
     def comment(self):
         """
-        Retrieve comments related to the issue.
+        Retrieves comments related to the specified issue.
+
+        This method retrieves comments associated with the issue identified by its ID.
+        If the comments have not been retrieved yet, they are fetched from the database
+        and cached to avoid repeated database calls.
+
+        Returns:
+            QuerySet: A QuerySet containing comments related to the issue.
         """
+
         if self._comment is None:
             self._comment = Comment.objects.filter(
                 issue_id=self.kwargs["issue_pk"]
